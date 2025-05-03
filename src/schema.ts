@@ -59,8 +59,20 @@ const NotificationSchema = new Schema(
   { timestamps: true }
 );
 
+const CategorySchema = new Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  icon_url: {
+    type: String,
+    required: true,
+  },
+});
+
 const User = model("User", UserSchema);
 const OTP = model("OTP", OTPSchema);
 const Notification = model("Notification", NotificationSchema);
+const Category = model("Category", CategorySchema);
 
-export { User, OTP, Notification };
+export { User, OTP, Notification, Category };

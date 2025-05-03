@@ -6,13 +6,10 @@ import authorize from "@middleware/auth";
 
 const registerUserRoutes = (app: Express) => {
   app.use("/auth", userRoutes.authRoutes);
+  app.use("/category", authorize(["user"]), userRoutes.categoryRoutes);
 };
 const registerAdminRoutes = (app: Express) => {
-  // app.use(
-  //   "/admin/categories",
-  //   authorize(["admin"]),
-  //   adminRoutes.categoriesRoutes
-  // );
+  app.use("/admin/category", authorize(["admin"]), adminRoutes.categoryRoutes);
 };
 
 const registerWebhookRoutes = (app: Express) => {
