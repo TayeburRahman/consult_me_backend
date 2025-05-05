@@ -23,16 +23,7 @@ const UserSchema = new Schema(
       type: Date,
     },
     // consultant fields
-    ratings: {
-      rating: {
-        type: Number,
-      },
-      rated_by: {
-        type: Types.ObjectId,
-        ref: "User",
-      },
-    },
-    years_of_expirence: {
+    years_of_experience: {
       type: Number,
     },
     clients: {
@@ -42,12 +33,23 @@ const UserSchema = new Schema(
     about: {
       type: String,
     },
-    available_time: {
-      type: String,
-    },
+    available_times: [
+      {
+        day: {
+          type: String,
+        },
+        time: {
+          type: String,
+          default: null,
+        },
+      },
+    ],
     service: {
       type: Types.ObjectId,
       ref: "Category",
+    },
+    price: {
+      type: Number,
     },
     // consultant fields
   },
@@ -115,10 +117,28 @@ const LegalSchema = new Schema(
   { timestamps: true }
 );
 
+const RatingSchema = new Schema({
+  rate: {
+    type: Number,
+    required: true,
+  },
+  rated_by: {
+    type: Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  rated: {
+    type: Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+});
+
 const User = model("User", UserSchema);
 const OTP = model("OTP", OTPSchema);
 const Notification = model("Notification", NotificationSchema);
 const Category = model("Category", CategorySchema);
 const Legal = model("Legal", LegalSchema);
+const Rating = model("Rating", RatingSchema);
 
-export { User, OTP, Notification, Category, Legal };
+export { User, OTP, Notification, Category, Legal, Rating };
