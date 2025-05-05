@@ -9,12 +9,14 @@ const registerUserRoutes = (app: Express) => {
   app.use("/category", authorize(["user"]), userRoutes.categoryRoutes);
   app.use(
     "/profile",
-    authorize(["user", "consultant"]),
+    authorize(["user", "consultant", "admin"]),
     userRoutes.profileRoutes
   );
+  app.use("/legal", userRoutes.legalRoutes);
 };
 const registerAdminRoutes = (app: Express) => {
   app.use("/admin/category", authorize(["admin"]), adminRoutes.categoryRoutes);
+  app.use("/admin/legal", authorize(["admin"]), adminRoutes.legalRoutes);
 };
 
 const registerWebhookRoutes = (app: Express) => {

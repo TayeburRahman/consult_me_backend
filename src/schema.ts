@@ -101,9 +101,24 @@ const CategorySchema = new Schema({
   },
 });
 
+const LegalSchema = new Schema(
+  {
+    type: {
+      type: String,
+      required: true,
+    },
+    content: {
+      type: String,
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
+
 const User = model("User", UserSchema);
 const OTP = model("OTP", OTPSchema);
 const Notification = model("Notification", NotificationSchema);
 const Category = model("Category", CategorySchema);
+const Legal = model("Legal", LegalSchema);
 
-export { User, OTP, Notification, Category };
+export { User, OTP, Notification, Category, Legal };
