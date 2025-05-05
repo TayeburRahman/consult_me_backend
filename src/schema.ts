@@ -11,7 +11,7 @@ const UserSchema = new Schema(
       type: String,
       required: true,
       default: "user",
-      enum: ["user", "admin"],
+      enum: ["user", "consultant", "admin"],
     },
     account_status: {
       type: String,
@@ -19,6 +19,37 @@ const UserSchema = new Schema(
       default: "Active",
       enum: ["Active", "Banned"],
     },
+    date_of_birth: {
+      type: Date,
+    },
+    // consultant fields
+    ratings: {
+      rating: {
+        type: Number,
+      },
+      rated_by: {
+        type: Types.ObjectId,
+        ref: "User",
+      },
+    },
+    years_of_expirence: {
+      type: Number,
+    },
+    clients: {
+      type: Types.ObjectId,
+      ref: "User",
+    },
+    about: {
+      type: String,
+    },
+    available_time: {
+      type: String,
+    },
+    service: {
+      type: Types.ObjectId,
+      ref: "Category",
+    },
+    // consultant fields
   },
   { timestamps: true }
 );

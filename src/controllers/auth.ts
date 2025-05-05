@@ -13,11 +13,21 @@ import { Request, Response } from "express";
 import { User } from "src/schema";
 
 const signup = async (req: Request, res: Response) => {
-  const { name, email, password } = req?.body || {};
+  const { name, email, password, type, phone } = req?.body || {};
 
-  const error = validateRequiredFields({ name, email, password });
+  const error = validateRequiredFields({ name, email, password, type, phone });
   if (error) {
     res.status(400).json({ message: error });
+    return;
+  }
+
+  if (!["user", "consultant"].includes(type)) {
+    res
+      .status(400)
+      .json({
+        message:
+          "Invalid user type. Only 'user' and 'consultant' are valid types.",
+      });
     return;
   }
 
@@ -30,7 +40,7 @@ const signup = async (req: Request, res: Response) => {
 
   const password_hash = await plainPasswordToHash(password);
 
-  await User.create({ name, email, password_hash });
+  await User.create({ name, email, password_hash, role: type, phone });
 
   const otp = await sendOTP(email, "signup");
   triggerNotification("SIGNUP", { email });
