@@ -13,7 +13,7 @@ export interface AuthenticatedRequest extends Request {
   user?: AccessTokenPayload;
 }
 
-const authorize = (allowedRoles: Array<"user" | "admin">) => {
+const authorize = (allowedRoles: Array<"user" | "consultant" | "admin">) => {
   return async (
     req: AuthenticatedRequest,
     res: Response,

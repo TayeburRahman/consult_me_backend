@@ -2,7 +2,7 @@ import { OTP } from "src/schema";
 import { sendEmail } from "./emailService";
 
 const generateOtp = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
 const sendOTP = async (
