@@ -1,6 +1,6 @@
 import uploadService from "@services/uploadService";
 import { Request, Response } from "express";
-import { Category } from "src/schema";
+import { Category, User } from "src/schema";
 
 const add_category = async (req: Request, res: Response) => {
   const { name } = req.body;
@@ -130,4 +130,48 @@ const delete_category = async (req: Request, res: Response) => {
   });
 };
 
-export { add_category, get_categories, update_category, delete_category };
+const get_consultant_by_category = async (req: Request, res: Response) => {
+  const { category_id, page, limit } = req.query;
+
+  const pageNumber = parseInt(page as string) || 1;
+  const pageSize = parseInt(limit as string) || 10;
+  const skip = (pageNumber - 1) * pageSize;
+
+  try {
+    const consultants = await User.find(
+      { service: category_id },
+      { __v: 0, password_hash: 0 }
+    )
+      .skip(skip)
+      .limit(pageSize);
+
+    const totalConsultants = await User.countDocuments({
+      service: category_id,
+    });
+
+    res.json({
+      message: "Consultants fetched successfully",
+      data: consultants,
+      meta: {
+        page: pageNumber,
+        limit: pageSize,
+        total: totalConsultants,
+        totalPages: Math.ceil(totalConsultants / pageSize),
+        hasNextPage: skip + pageSize < totalConsultants,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+export {
+  add_category,
+  get_categories,
+  update_category,
+  delete_category,
+  get_consultant_by_category,
+};
