@@ -13,6 +13,7 @@ const registerUserRoutes = (app: Express) => {
     userRoutes.profileRoutes
   );
   app.use("/legal", userRoutes.legalRoutes);
+  app.use("/booking", userRoutes.bookingRoutes);
 };
 const registerAdminRoutes = (app: Express) => {
   app.use("/admin/category", authorize(["admin"]), adminRoutes.categoryRoutes);

@@ -134,11 +134,43 @@ const RatingSchema = new Schema({
   },
 });
 
+const BookingSchema = new Schema({
+  user: {
+    type: Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  consultant: {
+    type: Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  date: {
+    type: Date,
+    required: true,
+  },
+  time: {
+    type: String,
+    required: true,
+  },
+  remind_before: {
+    type: String,
+    enum: ["5 minutes", "10 minutes", "15 minutes", "30 minutes"],
+    default: "5 minutes",
+  },
+  status: {
+    type: String,
+    enum: ["upcoming", "completed", "cancelled"],
+    default: "upcoming",
+  },
+});
+
 const User = model("User", UserSchema);
 const OTP = model("OTP", OTPSchema);
 const Notification = model("Notification", NotificationSchema);
 const Category = model("Category", CategorySchema);
 const Legal = model("Legal", LegalSchema);
 const Rating = model("Rating", RatingSchema);
+const Booking = model("Booking", BookingSchema);
 
-export { User, OTP, Notification, Category, Legal, Rating };
+export { User, OTP, Notification, Category, Legal, Rating, Booking };
