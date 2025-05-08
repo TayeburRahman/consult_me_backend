@@ -26,10 +26,6 @@ const UserSchema = new Schema(
     years_of_experience: {
       type: Number,
     },
-    clients: {
-      type: Types.ObjectId,
-      ref: "User",
-    },
     about: {
       type: String,
     },
@@ -155,13 +151,21 @@ const BookingSchema = new Schema({
   },
   remind_before: {
     type: String,
-    enum: ["5 minutes", "10 minutes", "15 minutes", "30 minutes"],
-    default: "5 minutes",
+    enum: [5, 10, 15, 30],
+    default: 5,
   },
   status: {
     type: String,
     enum: ["upcoming", "completed", "cancelled"],
     default: "upcoming",
+  },
+  transaction_id: {
+    type: String,
+  },
+  stripe_status: {
+    type: String,
+    enum: ["pending", "succeeded", "failed"],
+    default: "pending",
   },
 });
 

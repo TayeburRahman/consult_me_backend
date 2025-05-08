@@ -1,6 +1,6 @@
 import uploadService from "@services/uploadService";
 import { Request, Response } from "express";
-import { Category, User } from "src/schema";
+import { Booking, Category, Rating, User } from "src/schema";
 
 const add_category = async (req: Request, res: Response) => {
   const { name } = req.body;
@@ -142,6 +142,7 @@ const get_consultant_by_category = async (req: Request, res: Response) => {
       { service: category_id },
       { __v: 0, password_hash: 0 }
     )
+      .populate("service", { name: 1 })
       .skip(skip)
       .limit(pageSize);
 
@@ -149,9 +150,44 @@ const get_consultant_by_category = async (req: Request, res: Response) => {
       service: category_id,
     });
 
+    const uniqueClientIds = await Booking.distinct("client", {
+      consultant: category_id,
+      status: "upcoming",
+      stripe_status: "succeeded",
+    });
+
+    const fullConsultantData = await Promise.all(
+      consultants.map(async (consultant) => {
+        const rating = await Rating.aggregate([
+          {
+            $match: {
+              rated: consultant._id,
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              averageRating: { $avg: "$rate" },
+            },
+          },
+        ]);
+
+        return {
+          ...consultant.toObject(),
+          total_clients: uniqueClientIds.length,
+          rating: {
+            average: rating[0] ? rating[0].averageRating : 0,
+            total: await Rating.countDocuments({
+              rated: consultant._id,
+            }),
+          },
+        };
+      })
+    );
+
     res.json({
       message: "Consultants fetched successfully",
-      data: consultants,
+      data: fullConsultantData,
       meta: {
         page: pageNumber,
         limit: pageSize,
