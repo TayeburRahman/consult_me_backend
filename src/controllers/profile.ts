@@ -35,9 +35,33 @@ const get_profile = async (req: AuthenticatedRequest, res: Response) => {
     count: ratings_from_db.length > 0 ? ratings_from_db[0].count : 0,
   };
 
+  const profileData = {
+    _id: profile._id || null,
+    name: profile.name || null,
+    email: profile.email || null,
+    phone: profile.phone || null,
+    role: profile.role || null,
+    account_status: profile.account_status || null,
+    createdAt: profile.createdAt || null,
+    updatedAt: profile.updatedAt || null,
+    date_of_birth: profile.date_of_birth || null,
+    photo_url: profile.photo_url || null,
+    price: profile.price || null,
+    service: profile.service || null,
+    about: profile.about || null,
+    available_times: profile.available_times || null,
+    years_of_experience: profile.years_of_experience || null,
+    city: profile.city || null,
+    country: profile.country || null,
+    ratings: {
+      score: ratings.score || null,
+      count: ratings.count || null,
+    },
+  };
+
   res.status(200).json({
     message: "Profile fetched successfully",
-    data: { ...profile.toObject(), ratings },
+    data: profileData,
   });
 };
 const update_profile = async (req: AuthenticatedRequest, res: Response) => {
