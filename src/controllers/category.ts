@@ -158,28 +158,24 @@ const get_consultant_by_category = async (req: Request, res: Response) => {
 
     const fullConsultantData = await Promise.all(
       consultants.map(async (consultant) => {
-        const rating = await Rating.aggregate([
-          {
-            $match: {
-              rated: consultant._id,
-            },
-          },
-          {
-            $group: {
-              _id: null,
-              averageRating: { $avg: "$rate" },
-            },
-          },
+        // Fetch the rating data and client count in parallel
+        const [rating, totalRatings] = await Promise.all([
+          Rating.aggregate([
+            { $match: { rated: consultant._id } },
+            { $group: { _id: null, averageRating: { $avg: "$rate" } } },
+          ]),
+          Rating.countDocuments({ rated: consultant._id }),
         ]);
+
+        const averageRating = rating[0] ? rating[0].averageRating : 0;
+        const totalClients = uniqueClientIds.length;
 
         return {
           ...consultant.toObject(),
-          total_clients: uniqueClientIds.length,
+          total_clients: totalClients,
           rating: {
-            average: rating[0] ? rating[0].averageRating : 0,
-            total: await Rating.countDocuments({
-              rated: consultant._id,
-            }),
+            average: averageRating,
+            total: totalRatings,
           },
         };
       })

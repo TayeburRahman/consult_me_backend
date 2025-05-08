@@ -41,6 +41,7 @@ const get_profile = async (req: AuthenticatedRequest, res: Response) => {
   });
 };
 const update_profile = async (req: AuthenticatedRequest, res: Response) => {
+  const role = req.user?.role;
   const {
     name,
     email,
@@ -48,24 +49,39 @@ const update_profile = async (req: AuthenticatedRequest, res: Response) => {
     date_of_birth,
     years_of_experience,
     service,
-    address,
+    city,
+    country,
     price,
     about,
     available_times,
   } = req.body;
+  const isConsultant = role === "consultant";
+  const photo = req.file;
+
+  let photo_url;
+  try {
+    if (photo) {
+      photo_url = await uploadService(photo, "image");
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 
   try {
     await User.findByIdAndUpdate(req.user?.id, {
       ...(name && { name }),
-      ...(email && { email }),
+      ...(photo_url && { photo_url }),
       ...(phone && { phone }),
       ...(date_of_birth && { date_of_birth }),
-      ...(years_of_experience && { years_of_experience }),
-      ...(service && { service }),
-      ...(address && { address }),
-      ...(price && { price }),
-      ...(about && { about }),
-      ...(available_times && { available_times }),
+      ...(city && { city }),
+      ...(country && { country }),
+      ...(isConsultant && years_of_experience && { years_of_experience }),
+      ...(isConsultant && service && { service }),
+      ...(isConsultant && price && { price }),
+      ...(isConsultant && about && { about }),
+      ...(isConsultant &&
+        available_times && { available_times: JSON.parse(available_times) }),
     });
 
     res.status(200).json({
@@ -76,37 +92,6 @@ const update_profile = async (req: AuthenticatedRequest, res: Response) => {
     res.status(500).json({
       message: "Internal Server Error",
     });
-  }
-};
-const update_profile_photo = async (
-  req: AuthenticatedRequest,
-  res: Response
-) => {
-  const photo = req.file;
-
-  if (!photo) {
-    res.status(400).json({ message: "Photo is required" });
-    return;
-  }
-
-  let photo_url;
-  try {
-    photo_url = await uploadService(photo, "image");
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-
-  try {
-    if (!photo_url) {
-      res.status(500).json({ message: "Internal Server Error" });
-      return;
-    }
-    await User.findByIdAndUpdate(req.user?.id, { photo_url });
-    res.status(200).json({ message: "Profile photo updated successfully" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 const change_password = async (req: AuthenticatedRequest, res: Response) => {
@@ -139,4 +124,4 @@ const change_password = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-export { get_profile, update_profile, update_profile_photo, change_password };
+export { get_profile, update_profile, change_password };

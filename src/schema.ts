@@ -47,6 +47,12 @@ const UserSchema = new Schema(
     price: {
       type: Number,
     },
+    city: {
+      type: String,
+    },
+    country: {
+      type: String,
+    },
     // consultant fields
   },
   { timestamps: true }
