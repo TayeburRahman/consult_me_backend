@@ -201,10 +201,40 @@ const get_user_bookings = async (req: AuthenticatedRequest, res: Response) => {
   });
 };
 
-const reschedule_booking = async (
-  req: AuthenticatedRequest,
-  res: Response
-) => {};
+const reschedule_booking = async (req: AuthenticatedRequest, res: Response) => {
+  const { booking_id, date, time, remind_before } = req.body;
+  const user_id = req.user?.id;
+
+  if (!booking_id || !date || !time || !user_id) {
+    res.status(400).json({ message: "All fields are required" });
+    return;
+  }
+
+  const booking = await Booking.findById(booking_id, { __v: 0 });
+
+  if (!booking) {
+    res.status(404).json({ message: "Booking not found" });
+    return;
+  }
+
+  if (booking.user.toString() !== user_id) {
+    res
+      .status(403)
+      .json({ message: "You are not authorized to reschedule this booking" });
+    return;
+  }
+
+  booking.date = date;
+  booking.time = time;
+  booking.remind_before = remind_before;
+
+  await booking.save();
+
+  res.json({
+    message: "Booking rescheduled successfully",
+    data: booking,
+  });
+};
 
 export {
   get_available_slots,
