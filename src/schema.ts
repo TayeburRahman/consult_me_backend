@@ -175,6 +175,35 @@ const BookingSchema = new Schema({
   },
 });
 
+const MessageSchema = new Schema(
+  {
+    sender: {
+      type: Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    recipient: {
+      type: Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    content: {
+      type: String,
+      required: true,
+    },
+    is_read: {
+      type: Boolean,
+      default: false,
+    },
+    type: {
+      type: String,
+      enum: ["text", "image", "video", "audio"],
+      default: "text",
+    },
+  },
+  { timestamps: true }
+);
+
 const User = model("User", UserSchema);
 const OTP = model("OTP", OTPSchema);
 const Notification = model("Notification", NotificationSchema);
@@ -182,5 +211,6 @@ const Category = model("Category", CategorySchema);
 const Legal = model("Legal", LegalSchema);
 const Rating = model("Rating", RatingSchema);
 const Booking = model("Booking", BookingSchema);
+const Message = model("Message", MessageSchema);
 
-export { User, OTP, Notification, Category, Legal, Rating, Booking };
+export { User, OTP, Notification, Category, Legal, Rating, Booking, Message };

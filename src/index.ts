@@ -9,7 +9,8 @@ import {
 import startDB from "./db";
 import logger from "@utils/logger";
 import cors from "cors";
-import "@services/notificationService"
+import "@services/notificationService";
+import io from "@controllers/chat";
 
 config();
 startDB();
@@ -23,12 +24,14 @@ registerUserRoutes(app);
 registerAdminRoutes(app);
 
 const server = http.createServer(app);
+
+io.attach(server);
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 app.get("/", (_, res: Response) => {
   res.json({
-    message:
-      "Hello, this is the root route for Cathys Jewellery Shop Backend 🙌",
+    message: "Hello, this is the root route for Consult Me Backend 🙌",
   });
 });
