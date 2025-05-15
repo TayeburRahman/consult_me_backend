@@ -11,22 +11,17 @@ let active_users: { [key: string]: string } = {};
 io.on("connection", (socket) => {
   console.log("A user connected", socket.id);
 
-  socket.on("register", (user_id: string) => {
+  socket.on("register", (user_id) => {
     active_users[user_id] = socket.id;
     console.log(`${user_id} registered with socket ID ${socket.id}`);
     console.log({ active_users });
   });
 
-  socket.on(
-    "send_message",
-    async (data: {
-      sender: string;
-      recipient: string;
-      content: string;
-      type: string;
-    }) => {
-      const { sender, recipient, content, type } = data;
+  socket.on("send_message", async (data) => {
+    const { sender, recipient, content, type } = data;
+    console.log("Received message data:", data);
 
+    try {
       const new_message = await Message.create({
         sender,
         recipient,
@@ -34,59 +29,60 @@ io.on("connection", (socket) => {
         type,
       });
 
+      // Send the new message to the recipient in real time
       if (active_users[recipient]) {
         io.to(active_users[recipient]).emit("receive_message", new_message);
       }
+
+      // Update the message history for both the sender and recipient in real-time
+      const messages = await Message.find({
+        $or: [
+          { sender: sender, recipient: recipient },
+          { sender: recipient, recipient: sender },
+        ],
+      }).sort({ createdAt: 1 });
+
+      // Send the updated message history to both the sender and recipient
+      io.to(active_users[sender]).emit("message_history", messages);
+      if (active_users[recipient]) {
+        io.to(active_users[recipient]).emit("message_history", messages);
+      }
+    } catch (error) {
+      console.log("Error sending message:", error);
+      socket.emit("error", { message: "Error sending message" });
     }
-  );
+  });
 
-  socket.on(
-    "get_message_history",
-    async (data: { user_id: string; other_user: string }) => {
-      const { user_id, other_user } = data;
+  socket.on("get_message_history", async (data) => {
+    const { user_id, other_user } = data;
+    console.log("Fetching message history for:", data);
+    try {
+      // Fetch message history
+      const messages = await Message.find({
+        $or: [
+          { sender: user_id, recipient: other_user },
+          { sender: other_user, recipient: user_id },
+        ],
+      }).sort({ createdAt: 1 });
 
-      try {
-        const messages = await Message.find({
+      // Mark all unread messages as read
+      await Message.updateMany(
+        {
           $or: [
-            { sender: user_id, recipient: other_user },
-            { sender: other_user, recipient: user_id },
+            { sender: other_user, recipient: user_id, is_read: false },
+            { sender: user_id, recipient: other_user, is_read: false },
           ],
-        }).sort({ createdAt: 1 });
+        },
+        { $set: { is_read: true } }
+      );
 
-        socket.emit("message_history", messages);
-      } catch (error) {
-        console.log("Error fetching message history:", error);
-        socket.emit("error", { message: "Error fetching message history" });
-      }
+      // Emit updated message history to the user
+      socket.emit("message_history", messages);
+    } catch (error) {
+      console.log("Error fetching message history:", error);
+      socket.emit("error", { message: "Error fetching message history" });
     }
-  );
-
-  socket.on(
-    "mark_as_read",
-    async (data: { sender: string; recipient: string }) => {
-      const { sender, recipient } = data;
-      try {
-        await Message.updateMany(
-          {
-            sender,
-            recipient,
-            is_read: false,
-          },
-          {
-            $set: { is_read: true },
-          }
-        );
-
-        socket.emit("message_read", {
-          sender,
-          recipient,
-        });
-      } catch (error) {
-        console.log("Error marking messages as read:", error);
-        socket.emit("error", { message: "Error marking messages as read" });
-      }
-    }
-  );
+  });
 
   socket.on("disconnect", () => {
     for (const user_id in active_users) {
@@ -118,25 +114,25 @@ const get_chat_list = async (req: AuthenticatedRequest, res: Response) => {
         $group: {
           _id: {
             $cond: [
-              { $gt: [{ $cmp: ["$sender", "$recipient"] }, 0] }, // Check if sender > recipient (to create a unique pair)
-              { sender: "$recipient", recipient: "$sender" }, // Swap sender and recipient for uniqueness
+              { $gt: [{ $cmp: ["$sender", "$recipient"] }, 0] }, // Ensure unique pair
+              { sender: "$recipient", recipient: "$sender" },
               { sender: "$sender", recipient: "$recipient" },
             ],
           },
-          lastMessage: { $last: "$content" }, // Get the last message
+          lastMessage: { $last: "$content" }, // Get the last message content
           unreadMessageCount: {
             $sum: {
               $cond: [{ $eq: ["$is_read", false] }, 1, 0],
             },
           },
-          sender: { $first: "$sender" }, // Get sender details
-          recipient: { $first: "$recipient" }, // Get recipient details
+          lastMessageCreatedAt: { $last: "$createdAt" }, // Get the createdAt of the last message
+          sender: { $first: "$sender" }, // Get the sender ID
+          recipient: { $first: "$recipient" }, // Get the recipient ID
         },
       },
-      // Step 3: Lookup sender and recipient details (populate name and photo_url only)
       {
         $lookup: {
-          from: "users", // Assuming "users" collection for sender
+          from: "users",
           localField: "sender",
           foreignField: "_id",
           as: "senderDetails",
@@ -144,31 +140,47 @@ const get_chat_list = async (req: AuthenticatedRequest, res: Response) => {
       },
       {
         $lookup: {
-          from: "users", // Assuming "users" collection for recipient
+          from: "users",
           localField: "recipient",
           foreignField: "_id",
           as: "recipientDetails",
         },
       },
-      // Step 4: Project the data in the desired format (only name and photo_url)
       {
         $project: {
-          _id: 0, // Remove the _id field
-          sender: {
-            name: { $arrayElemAt: ["$senderDetails.name", 0] },
-            photo_url: { $arrayElemAt: ["$senderDetails.photo_url", 0] },
+          _id: 0,
+          otherUser: {
+            $cond: [
+              { $eq: ["$sender", new ObjectId(user_id)] }, // Check if the sender is the requester
+              {
+                id: { $arrayElemAt: ["$recipientDetails._id", 0] },
+                name: { $arrayElemAt: ["$recipientDetails.name", 0] },
+                photo_url: {
+                  $ifNull: [
+                    { $arrayElemAt: ["$recipientDetails.photo_url", 0] },
+                    null,
+                  ],
+                },
+              },
+              {
+                id: { $arrayElemAt: ["$senderDetails._id", 0] },
+                name: { $arrayElemAt: ["$senderDetails.name", 0] },
+                photo_url: {
+                  $ifNull: [
+                    { $arrayElemAt: ["$senderDetails.photo_url", 0] },
+                    null,
+                  ],
+                },
+              },
+            ],
           },
-          recipient: {
-            name: { $arrayElemAt: ["$recipientDetails.name", 0] },
-            photo_url: { $arrayElemAt: ["$recipientDetails.photo_url", 0] },
-          },
-          unread_message_count: "$unreadMessageCount", // Add unread message count
-          last_message: "$lastMessage", // Add the last message
+          unread_message_count: "$unreadMessageCount",
+          last_message: "$lastMessage",
+          last_message_created_at: "$lastMessageCreatedAt", // Include the createdAt of the last message
         },
       },
-      // Step 5: Sort by the most recent message (timestamp)
       {
-        $sort: { "sender.createdAt": -1 },
+        $sort: { last_message_created_at: -1 }, // Sort by the last message's createdAt
       },
     ]);
 
