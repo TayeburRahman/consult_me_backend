@@ -188,19 +188,28 @@ const book_an_appointment = async (
 
 const get_user_bookings = async (req: AuthenticatedRequest, res: Response) => {
   const user_id = req.user?.id;
+  const { type } = req.query;
+
+  if (type != "upcoming" && type != "completed") {
+    res.status(400).json({ message: "Invalid type provided" });
+    return;
+  }
 
   if (!user_id) {
     res.status(400).json({ message: "User ID is required" });
     return;
   }
 
-  const bookings = await Booking.find({ user: user_id })
+  const bookings = await Booking.find(
+    { user: user_id, status: type },
+    { __v: 0, stripe_status: 0, user: 0 }
+  )
     .populate({
       path: "consultant",
-      select: "name",
+      select: "name photo_url -_id",
       populate: {
         path: "service",
-        select: "name",
+        select: "name -_id",
       },
     })
     .sort({ date: -1 });
