@@ -1,5 +1,6 @@
 import { AuthenticatedRequest } from "@middleware/auth";
-import { Request, Response } from "express";
+import uploadService from "@services/uploadService";
+import { Response } from "express";
 import mongoose from "mongoose";
 import { Server } from "socket.io";
 import { Message } from "src/schema";
@@ -18,7 +19,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send_message", async (data) => {
-    const { sender, recipient, content, type } = data;
+    const { sender, recipient, content, type, attachments } = data;
     console.log("Received message data:", data);
 
     try {
@@ -27,6 +28,7 @@ io.on("connection", (socket) => {
         recipient,
         content,
         type,
+        attachments,
       });
 
       // Send the new message to the recipient in real time
@@ -196,4 +198,47 @@ const get_chat_list = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-export { io, get_chat_list };
+const upload_attachments = async (req: AuthenticatedRequest, res: Response) => {
+  let images: Express.Multer.File[] | undefined;
+  let videos: Express.Multer.File[] | undefined;
+
+  if (req.files && !Array.isArray(req.files)) {
+    images = req.files["images"];
+    videos = req.files["videos"];
+  }
+
+  if (!images && !videos) {
+    return res.status(400).json({ message: "No files uploaded" });
+  }
+
+  const uploadedFiles: string[] = [];
+
+  if (images) {
+    for (const image of images) {
+      const uploadedFile = await uploadService(image, "image");
+      if (uploadedFile) {
+        uploadedFiles.push(uploadedFile);
+      }
+    }
+  }
+
+  if (videos) {
+    for (const video of videos) {
+      const uploadedFile = await uploadService(video, "video");
+      if (uploadedFile) {
+        uploadedFiles.push(uploadedFile);
+      }
+    }
+  }
+
+  if (uploadedFiles.length === 0) {
+    return res.status(400).json({ message: "No files uploaded" });
+  }
+
+  res.status(200).json({
+    message: "Files uploaded successfully",
+    data: uploadedFiles,
+  });
+};
+
+export { io, get_chat_list, upload_attachments };

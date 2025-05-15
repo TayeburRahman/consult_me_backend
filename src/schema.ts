@@ -197,8 +197,11 @@ const MessageSchema = new Schema(
     },
     type: {
       type: String,
-      enum: ["text", "image", "video", "audio"],
+      enum: ["text", "image", "video"],
       default: "text",
+    },
+    attachments: {
+      type: [String],
     },
   },
   { timestamps: true }
