@@ -201,14 +201,17 @@ const get_consultant_by_category = async (req: Request, res: Response) => {
 };
 
 const get_all_consultants = async (req: Request, res: Response) => {
-  const { page, limit } = req.query;
+  const { page, limit, query } = req.query;
   const pageNumber = parseInt(page as string) || 1;
   const pageSize = parseInt(limit as string) || 10;
   const skip = (pageNumber - 1) * pageSize;
 
   try {
     const consultants = await User.find(
-      { role: "consultant" },
+      {
+        ...(query ? { name: { $regex: query, $options: "i" } } : {}),
+        role: "consultant",
+      },
       { __v: 0, password_hash: 0 }
     )
       .populate("service", { name: 1 })

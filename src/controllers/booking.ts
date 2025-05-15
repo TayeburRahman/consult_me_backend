@@ -195,7 +195,14 @@ const get_user_bookings = async (req: AuthenticatedRequest, res: Response) => {
   }
 
   const bookings = await Booking.find({ user: user_id })
-    .populate("consultant")
+    .populate({
+      path: "consultant",
+      select: "name",
+      populate: {
+        path: "service",
+        select: "name",
+      },
+    })
     .sort({ date: -1 });
 
   if (!bookings) {
