@@ -22,6 +22,12 @@ const UserSchema = new Schema(
     date_of_birth: {
       type: Date,
     },
+    lat: {
+      type: Number,
+    },
+    lng: {
+      type: Number,
+    },
     // consultant fields
     years_of_experience: {
       type: Number,
