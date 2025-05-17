@@ -7,6 +7,7 @@ import authorize from "@middleware/auth";
 const registerUserRoutes = (app: Express) => {
   app.use("/auth", userRoutes.authRoutes);
   app.use("/category", authorize(["user"]), userRoutes.categoryRoutes);
+  app.use("/consultant", authorize(["user"]), userRoutes.consultantRoutes);
   app.use(
     "/profile",
     authorize(["user", "consultant", "admin"]),
@@ -15,6 +16,7 @@ const registerUserRoutes = (app: Express) => {
   app.use("/legal", userRoutes.legalRoutes);
   app.use("/booking", authorize(["user"]), userRoutes.bookingRoutes);
   app.use("/chat", authorize(["user"]), userRoutes.chatRoutes);
+  app.use("/dashboard", authorize(["user"]), userRoutes.dashboardRoutes);
 };
 const registerAdminRoutes = (app: Express) => {
   app.use("/admin/category", authorize(["admin"]), adminRoutes.categoryRoutes);
