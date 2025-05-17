@@ -235,6 +235,7 @@ const get_all_consultants = async (req: Request, res: Response) => {
 
         return {
           ...consultant.toObject(),
+          total_clients: null,
           rating: {
             average: averageRating,
             total: totalRatings,

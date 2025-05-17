@@ -206,7 +206,7 @@ const get_user_bookings = async (req: AuthenticatedRequest, res: Response) => {
   )
     .populate({
       path: "consultant",
-      select: "name photo_url -_id",
+      select: "name photo_url",
       populate: {
         path: "service",
         select: "name -_id",
