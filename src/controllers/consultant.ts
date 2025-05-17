@@ -1,3 +1,4 @@
+import { AuthenticatedRequest } from "@middleware/auth";
 import { Request, Response } from "express";
 import { Booking, Rating, User } from "src/schema";
 
@@ -134,4 +135,57 @@ const get_all_consultants = async (req: Request, res: Response) => {
   }
 };
 
-export { get_consultant_by_category, get_all_consultants };
+const add_review = async (req: AuthenticatedRequest, res: Response) => {
+  const { consultant_id, rate } = req.body;
+
+  if (1 > rate || rate > 5) {
+    res.status(400).json({
+      message: "Rate must be between 1 and 5",
+    });
+    return;
+  }
+
+  if (!consultant_id) {
+    res.status(400).json({
+      message: "Consultant ID is required",
+    });
+    return;
+  }
+
+  try {
+    const existingRating = await Rating.findOne({
+      rated_by: req.user?.id,
+      rated: consultant_id,
+    });
+
+    if (existingRating) {
+      existingRating.rate = rate;
+      await existingRating.save();
+      res.status(200).json({
+        message: "Review updated successfully",
+        data: existingRating,
+      });
+      return;
+    }
+
+    const newRating = new Rating({
+      rated_by: req.user?.id,
+      rated: consultant_id,
+      rate,
+    });
+
+    await newRating.save();
+
+    res.json({
+      message: "Review added successfully",
+      data: newRating,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+export { get_consultant_by_category, get_all_consultants, add_review };
