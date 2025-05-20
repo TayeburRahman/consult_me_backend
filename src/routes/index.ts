@@ -17,6 +17,7 @@ const registerUserRoutes = (app: Express) => {
   app.use("/booking", authorize(["user"]), userRoutes.bookingRoutes);
   app.use("/chat", authorize(["user"]), userRoutes.chatRoutes);
   app.use("/dashboard", authorize(["user"]), userRoutes.dashboardRoutes);
+  app.use("/notifications", authorize(["user"]), userRoutes.notificationRoutes);
 };
 const registerAdminRoutes = (app: Express) => {
   app.use("/admin/category", authorize(["admin"]), adminRoutes.categoryRoutes);
