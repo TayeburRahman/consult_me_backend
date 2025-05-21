@@ -200,19 +200,42 @@ const get_user_bookings = async (req: AuthenticatedRequest, res: Response) => {
     return;
   }
 
-  const bookings = await Booking.find(
-    { user: user_id, status: type },
-    { __v: 0, stripe_status: 0, user: 0 }
-  )
-    .populate({
-      path: "consultant",
-      select: "name photo_url",
-      populate: {
-        path: "service",
-        select: "name -_id",
-      },
-    })
-    .sort({ date: -1 });
+  const user = await User.findById(user_id);
+
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+
+  let bookings;
+
+  if (user.role === "user") {
+    bookings = await Booking.find(
+      { user: user_id, status: type },
+      { __v: 0, stripe_status: 0, user: 0 }
+    )
+      .populate({
+        path: "consultant",
+        select: "name photo_url",
+        populate: {
+          path: "service",
+          select: "name -_id",
+        },
+      })
+      .sort({ date: -1 });
+  }
+
+  if (user.role === "consultant") {
+    bookings = await Booking.find(
+      { consultant: user_id, status: type },
+      { __v: 0, stripe_status: 0, consultant: 0 }
+    )
+      .populate({
+        path: "user",
+        select: "name photo_url",
+      })
+      .sort({ date: -1 });
+  }
 
   if (!bookings) {
     res.status(404).json({ message: "No bookings found" });

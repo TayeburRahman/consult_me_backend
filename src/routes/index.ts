@@ -14,7 +14,11 @@ const registerUserRoutes = (app: Express) => {
     userRoutes.profileRoutes
   );
   app.use("/legal", userRoutes.legalRoutes);
-  app.use("/booking", authorize(["user"]), userRoutes.bookingRoutes);
+  app.use(
+    "/booking",
+    authorize(["user", "consultant"]),
+    userRoutes.bookingRoutes
+  );
   app.use("/chat", authorize(["user"]), userRoutes.chatRoutes);
   app.use("/dashboard", authorize(["user"]), userRoutes.dashboardRoutes);
   app.use("/notifications", authorize(["user"]), userRoutes.notificationRoutes);
