@@ -20,7 +20,11 @@ const registerUserRoutes = (app: Express) => {
     userRoutes.bookingRoutes
   );
   app.use("/chat", authorize(["user"]), userRoutes.chatRoutes);
-  app.use("/dashboard", authorize(["user"]), userRoutes.dashboardRoutes);
+  app.use(
+    "/dashboard",
+    authorize(["user", "consultant"]),
+    userRoutes.dashboardRoutes
+  );
   app.use("/notifications", authorize(["user"]), userRoutes.notificationRoutes);
 };
 const registerAdminRoutes = (app: Express) => {

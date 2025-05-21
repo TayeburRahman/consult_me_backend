@@ -1,8 +1,8 @@
-import { user_overview } from "@controllers/dashboard";
+import { overview } from "@controllers/dashboard";
 import { Router } from "express";
 
 const router = Router();
 
-router.get("/overview", user_overview);
+router.get("/overview", overview);
 
 export default router;
