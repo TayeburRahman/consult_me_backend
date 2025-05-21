@@ -7,3 +7,4 @@ export { default as bookingRoutes } from "./booking.routes";
 export { default as chatRoutes } from "./chat.routes";
 export { default as dashboardRoutes } from "./dashboard.routes";
 export { default as notificationRoutes } from "./notification.routes";
+export { default as mapRoutes } from "./map.routes";

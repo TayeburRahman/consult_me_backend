@@ -26,6 +26,7 @@ const registerUserRoutes = (app: Express) => {
     userRoutes.dashboardRoutes
   );
   app.use("/notifications", authorize(["user"]), userRoutes.notificationRoutes);
+  app.use("/map", authorize(["user"]), userRoutes.mapRoutes);
 };
 const registerAdminRoutes = (app: Express) => {
   app.use("/admin/category", authorize(["admin"]), adminRoutes.categoryRoutes);

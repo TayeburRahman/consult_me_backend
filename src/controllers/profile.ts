@@ -78,6 +78,8 @@ const update_profile = async (req: AuthenticatedRequest, res: Response) => {
     price,
     about,
     available_times,
+    lat,
+    lng,
   } = req.body;
   const isConsultant = role === "consultant";
   const photo = req.file;
@@ -100,6 +102,8 @@ const update_profile = async (req: AuthenticatedRequest, res: Response) => {
       ...(date_of_birth && { date_of_birth }),
       ...(city && { city }),
       ...(country && { country }),
+      ...(lat && { lat }),
+      ...(lng && { lng }),
       ...(isConsultant && years_of_experience && { years_of_experience }),
       ...(isConsultant && service && { service }),
       ...(isConsultant && price && { price }),
