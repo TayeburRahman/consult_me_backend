@@ -59,6 +59,17 @@ const UserSchema = new Schema(
     country: {
       type: String,
     },
+    balance: {
+      type: Number,
+      default: 0,
+    },
+    stripeAccountId: {
+      type: String,
+    },
+    stripeOnboardingDone: {
+      type: Boolean,
+      default: false,
+    },
     // consultant fields
   },
   { timestamps: true }
@@ -213,6 +224,53 @@ const MessageSchema = new Schema(
   { timestamps: true }
 );
 
+const PaymentSchema = new Schema({
+  amount: {
+    type: Number,
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  paymentId: {
+    type: String,
+    required: true,
+  },
+  paymentStatus: {
+    type: String,
+  },
+  userId: {
+    type: Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  bookingId: {
+    type: Types.ObjectId,
+    ref: "Booking",
+  },
+});
+
+const WithdrawSchema = new Schema({
+  user: {
+    type: Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  amount: {
+    type: Number,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["pending", "completed", "failed"],
+    default: "pending",
+  },
+  transaction_id: {
+    type: String,
+  },
+});
+
 const User = model("User", UserSchema);
 const OTP = model("OTP", OTPSchema);
 const Notification = model("Notification", NotificationSchema);
@@ -221,5 +279,18 @@ const Legal = model("Legal", LegalSchema);
 const Rating = model("Rating", RatingSchema);
 const Booking = model("Booking", BookingSchema);
 const Message = model("Message", MessageSchema);
+const Payment = model("Payment", PaymentSchema);
+const Withdraw = model("Withdraw", WithdrawSchema);
 
-export { User, OTP, Notification, Category, Legal, Rating, Booking, Message };
+export {
+  User,
+  OTP,
+  Notification,
+  Category,
+  Legal,
+  Rating,
+  Booking,
+  Message,
+  Payment,
+  Withdraw,
+};

@@ -27,15 +27,17 @@ const registerUserRoutes = (app: Express) => {
   );
   app.use("/notifications", authorize(["user"]), userRoutes.notificationRoutes);
   app.use("/map", authorize(["user"]), userRoutes.mapRoutes);
+  app.use("/payments", authorize(["consultant"]), userRoutes.paymentsRoutes);
 };
 const registerAdminRoutes = (app: Express) => {
   app.use("/admin/category", authorize(["admin"]), adminRoutes.categoryRoutes);
   app.use("/admin/legal", authorize(["admin"]), adminRoutes.legalRoutes);
   app.use("/admin/users", authorize(["admin"]), adminRoutes.usersRoutes);
+  app.use("/admin/payments", authorize(["admin"]), adminRoutes.paymentsRoutes);
 };
 
 const registerWebhookRoutes = (app: Express) => {
-  // app.use("/webhook", webhookRoutes);
+  app.use("/webhook", webhookRoutes);
 };
 
 export { registerUserRoutes, registerAdminRoutes, registerWebhookRoutes };

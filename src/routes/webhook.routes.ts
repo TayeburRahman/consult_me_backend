@@ -1,4 +1,4 @@
-import { stripe_webhook } from "@controllers/orders";
+import { stripe_webhook } from "@controllers/payments";
 import express, { Router } from "express";
 
 const router = Router();

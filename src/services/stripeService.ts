@@ -51,3 +51,70 @@ export const createCheckoutSession = async ({
     return error;
   }
 };
+
+export const createStripeConnectExpressAccount = async (email: string) => {
+  try {
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: "2025-02-24.acacia",
+    });
+
+    // Create an Express Account for the user
+    const account = await stripe.accounts.create({
+      type: "express",
+      email,
+      capabilities: {
+        transfers: { requested: true },
+      },
+    });
+
+    return { success: true, accountId: account.id };
+  } catch (error) {
+    console.error("Error creating Stripe Connect account:", error);
+    return { success: false, error };
+  }
+};
+
+export const getOnboardingLink = async (accountId: string) => {
+  try {
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: "2025-02-24.acacia",
+    });
+
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: "http://localhost:5174",
+      return_url: "http://localhost:5174",
+      type: "account_onboarding",
+    });
+
+    return { success: true, url: accountLink.url };
+  } catch (error) {
+    console.error("Error creating onboarding link:", error);
+    return { success: false, error };
+  }
+};
+
+export const transferToConnectedAccount = async ({
+  amountInCents,
+  destinationAccountId,
+}: {
+  amountInCents: number;
+  destinationAccountId: string;
+}) => {
+  try {
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: "2025-02-24.acacia",
+    });
+
+    const transfer = await stripe.transfers.create({
+      amount: amountInCents, // Amount in cents
+      currency: "usd",
+      destination: destinationAccountId, // User's Stripe Connect Account ID
+    });
+
+    return { success: true, transfer };
+  } catch (error) {
+    console.error("Error transferring funds:", error);
+    return { success: false, error };
+  }
+};
