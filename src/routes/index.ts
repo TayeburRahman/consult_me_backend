@@ -31,6 +31,7 @@ const registerUserRoutes = (app: Express) => {
 const registerAdminRoutes = (app: Express) => {
   app.use("/admin/category", authorize(["admin"]), adminRoutes.categoryRoutes);
   app.use("/admin/legal", authorize(["admin"]), adminRoutes.legalRoutes);
+  app.use("/admin/users", authorize(["admin"]), adminRoutes.usersRoutes);
 };
 
 const registerWebhookRoutes = (app: Express) => {

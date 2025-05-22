@@ -101,6 +101,11 @@ const login = async (req: Request, res: Response) => {
     return;
   }
 
+  if (user.account_status === "Banned") {
+    res.status(400).json({ message: "User is banned" });
+    return;
+  }
+
   const isPasswordCorrect = await comparePassword(password, user.password_hash);
   if (!isPasswordCorrect) {
     res.status(400).json({ message: "Invalid password" });
