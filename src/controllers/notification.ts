@@ -10,10 +10,30 @@ const get_notification = async (req: AuthenticatedRequest, res: Response) => {
     select: "name photo_url",
   });
 
+  await Notification.updateMany(
+    { recipientId: req?.user?.id, isRead: false },
+    { $set: { isRead: true } }
+  );
+
   res.status(200).json({
     message: "Notifications fetched successfully",
     data: notifications,
   });
 };
 
-export { get_notification };
+const get_notification_count = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  const notification_count = await Notification.countDocuments({
+    recipientId: req.user?.id,
+    isRead: false,
+  });
+
+  res.status(200).json({
+    message: "Notification count fetched successfully",
+    data: notification_count,
+  });
+};
+
+export { get_notification, get_notification_count };
