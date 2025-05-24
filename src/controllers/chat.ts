@@ -65,7 +65,7 @@ io.on("connection", (socket) => {
           { sender: user_id, recipient: other_user },
           { sender: other_user, recipient: user_id },
         ],
-      }).sort({ createdAt: 1 });
+      }).sort({ createdAt: -1 });
 
       // Mark all unread messages as read
       await Message.updateMany(
