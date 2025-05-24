@@ -1,6 +1,6 @@
 import uploadService from "@services/uploadService";
 import { Request, Response } from "express";
-import { Category } from "src/schema";
+import { Category } from "../schema";
 
 const get_categories = async (req: Request, res: Response) => {
   const categories = await Category.find({}, { __v: 0 });

@@ -10,7 +10,7 @@ import {
 import { comparePassword, plainPasswordToHash } from "@utils/password";
 import validateRequiredFields from "@utils/validateRequiredFields";
 import { Request, Response } from "express";
-import { User } from "src/schema";
+import { User } from "../schema";
 
 const signup = async (req: Request, res: Response) => {
   const { name, email, password, type, phone, lat, lng } = req?.body || {};

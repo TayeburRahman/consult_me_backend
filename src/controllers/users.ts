@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { User } from "src/schema";
+import { User } from "../schema";
 
 const get_users = async (req: Request, res: Response) => {
   const { page, limit } = req.query;

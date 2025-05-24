@@ -2,7 +2,7 @@ import { AuthenticatedRequest } from "@middleware/auth";
 import uploadService from "@services/uploadService";
 import { comparePassword, plainPasswordToHash } from "@utils/password";
 import { Response } from "express";
-import { Rating, User } from "src/schema";
+import { Rating, User } from "../schema";
 
 const get_profile = async (req: AuthenticatedRequest, res: Response) => {
   const { profile_id } = req.query;

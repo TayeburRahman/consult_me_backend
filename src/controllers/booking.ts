@@ -1,7 +1,7 @@
 import { AuthenticatedRequest } from "@middleware/auth";
 import { createCheckoutSession } from "@services/stripeService";
 import { Request, Response } from "express";
-import { Booking, User } from "src/schema";
+import { Booking, User } from "../schema";
 
 const get_available_slots = async (req: Request, res: Response) => {
   const { consultant_id, date } = req.query;

@@ -1,6 +1,6 @@
 import { AuthenticatedRequest } from "@middleware/auth";
 import { Request, Response } from "express";
-import { Booking, Rating, User } from "src/schema";
+import { Booking, Rating, User } from "../schema";
 
 const get_consultant_by_category = async (req: Request, res: Response) => {
   const { category_id, page, limit } = req.query;

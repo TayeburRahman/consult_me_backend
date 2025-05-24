@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { Notification } from "src/schema";
+import { Notification } from "../schema";
 
 class EventBus extends EventEmitter {}
 

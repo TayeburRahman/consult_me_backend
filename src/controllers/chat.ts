@@ -3,7 +3,7 @@ import uploadService from "@services/uploadService";
 import { Response } from "express";
 import mongoose from "mongoose";
 import { Server } from "socket.io";
-import { Message } from "src/schema";
+import { Message } from "../schema";
 
 const io = new Server();
 

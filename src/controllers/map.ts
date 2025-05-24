@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { User } from "src/schema";
+import { User } from "../schema";
 
 const get_map_consultants = async (req: Request, res: Response) => {
   try {

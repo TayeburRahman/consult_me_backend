@@ -6,7 +6,7 @@ import {
 } from "@services/stripeService";
 import { Request, Response } from "express";
 import { isValidObjectId } from "mongoose";
-import { Booking, Payment, User, Withdraw } from "src/schema";
+import { Booking, Payment, User, Withdraw } from "../schema";
 import Stripe from "stripe";
 
 const stripe_webhook = async (req: Request, res: Response): Promise<void> => {

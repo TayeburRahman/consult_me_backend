@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Legal } from "src/schema";
+import { Legal } from "../schema";
 
 const get_legal_info = async (req: Request, res: Response) => {
   const { type } = req.query;

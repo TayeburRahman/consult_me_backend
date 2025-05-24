@@ -1,6 +1,6 @@
 import { AuthenticatedRequest } from "@middleware/auth";
 import { Response } from "express";
-import { Booking, Rating } from "src/schema";
+import { Booking, Rating } from "../schema";
 
 const overview = async (req: AuthenticatedRequest, res: Response) => {
   const id = req.user?.id;

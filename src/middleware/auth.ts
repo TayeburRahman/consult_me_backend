@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyAccessToken } from "@utils/jwt";
-import { User } from "src/schema";
+import { User } from "../schema";
 
 interface AccessTokenPayload {
   id: string;

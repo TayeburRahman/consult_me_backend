@@ -1,6 +1,6 @@
 import { AuthenticatedRequest } from "@middleware/auth";
 import { Response } from "express";
-import { Notification } from "src/schema";
+import { Notification } from "../schema";
 
 const get_notification = async (req: AuthenticatedRequest, res: Response) => {
   const notifications = await Notification.find({

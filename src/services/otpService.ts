@@ -1,4 +1,4 @@
-import { OTP } from "src/schema";
+import { OTP } from "../schema";
 import { sendEmail } from "./emailService";
 
 const generateOtp = () => {
