@@ -98,14 +98,22 @@ const NotificationSchema = new Schema(
       type: String,
       required: true,
     },
-    details: {
+    description: {
       type: String,
       required: true,
     },
+    type: { type: String, required: true },
     isRead: {
       type: Boolean,
       required: true,
       default: false,
+    },
+    recipientId: { type: Types.ObjectId, ref: "User" },
+    recipientRole: { type: String, required: true },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      expires: 60 * 60 * 24 * 7, // 7 days
     },
   },
   { timestamps: true }

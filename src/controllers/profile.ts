@@ -10,6 +10,9 @@ const get_profile = async (req: AuthenticatedRequest, res: Response) => {
   const profile = await User.findById(profile_id || req.user?.id, {
     __v: 0,
     password_hash: 0,
+  }).populate({
+    path: "service",
+    select: "name",
   });
 
   if (!profile) {
