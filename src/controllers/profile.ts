@@ -2,7 +2,7 @@ import { AuthenticatedRequest } from "@middleware/auth";
 import uploadService from "@services/uploadService";
 import { comparePassword, plainPasswordToHash } from "@utils/password";
 import { Response } from "express";
-import { Rating, User } from "../schema";
+import { Booking, Rating, User } from "../schema";
 
 const get_profile = async (req: AuthenticatedRequest, res: Response) => {
   const { profile_id } = req.query;
@@ -38,6 +38,14 @@ const get_profile = async (req: AuthenticatedRequest, res: Response) => {
     count: ratings_from_db.length > 0 ? ratings_from_db[0].count : 0,
   };
 
+  const client_count_result = await Booking.aggregate([
+    { $match: { consultant: profile._id } },
+    { $group: { _id: "$user" } },
+    { $count: "uniqueUsers" },
+  ]);
+  const client_count =
+    client_count_result.length > 0 ? client_count_result[0].uniqueUsers : 0;
+
   const profileData = {
     _id: profile._id || null,
     name: profile.name || null,
@@ -60,6 +68,7 @@ const get_profile = async (req: AuthenticatedRequest, res: Response) => {
       score: ratings.score || null,
       count: ratings.count || null,
     },
+    client_count: client_count || null,
   };
 
   res.status(200).json({
