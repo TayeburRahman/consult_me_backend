@@ -6,7 +6,11 @@ import authorize from "@middleware/auth";
 
 const registerUserRoutes = (app: Express) => {
   app.use("/auth", userRoutes.authRoutes);
-  app.use("/category", authorize(["user"]), userRoutes.categoryRoutes);
+  app.use(
+    "/category",
+    authorize(["user", "consultant"]),
+    userRoutes.categoryRoutes
+  );
   app.use("/consultant", authorize(["user"]), userRoutes.consultantRoutes);
   app.use(
     "/profile",
