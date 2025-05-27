@@ -21,7 +21,7 @@ const signup = async (req: Request, res: Response) => {
     phone,
     lat,
     lng,
-    experience_in_years,
+    years_of_experience,
     service_id,
   } = req?.body || {};
 
@@ -39,7 +39,7 @@ const signup = async (req: Request, res: Response) => {
     return;
   }
 
-  if (type === "consultant" && (!experience_in_years || !service_id)) {
+  if (type === "consultant" && (!years_of_experience || !service_id)) {
     res.status(400).json({
       message:
         "Experience in years and service ID are required for consultant type.",
@@ -72,7 +72,7 @@ const signup = async (req: Request, res: Response) => {
     lat,
     lng,
     ...(type === "consultant" && {
-      years_of_experience: experience_in_years,
+      years_of_experience,
       service: service_id,
     }),
   });
