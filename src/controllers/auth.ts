@@ -10,10 +10,20 @@ import {
 import { comparePassword, plainPasswordToHash } from "@utils/password";
 import validateRequiredFields from "@utils/validateRequiredFields";
 import { Request, Response } from "express";
-import { User } from "../schema";
+import { Category, User } from "../schema";
 
 const signup = async (req: Request, res: Response) => {
-  const { name, email, password, type, phone, lat, lng } = req?.body || {};
+  const {
+    name,
+    email,
+    password,
+    type,
+    phone,
+    lat,
+    lng,
+    experience_in_years,
+    service_id,
+  } = req?.body || {};
 
   const error = validateRequiredFields({ name, email, password, type, phone });
   if (error) {
@@ -26,6 +36,21 @@ const signup = async (req: Request, res: Response) => {
       message:
         "Invalid user type. Only 'user' and 'consultant' are valid types.",
     });
+    return;
+  }
+
+  if (type === "consultant" && (!experience_in_years || !service_id)) {
+    res.status(400).json({
+      message:
+        "Experience in years and service ID are required for consultant type.",
+    });
+    return;
+  }
+
+  const serviceExists = await Category.findById(service_id);
+
+  if (type === "consultant" && !serviceExists) {
+    res.status(400).json({ message: "Service not found" });
     return;
   }
 
@@ -46,6 +71,10 @@ const signup = async (req: Request, res: Response) => {
     phone,
     lat,
     lng,
+    ...(type === "consultant" && {
+      years_of_experience: experience_in_years,
+      service: service_id,
+    }),
   });
 
   const otp = await sendOTP(email, "signup");
