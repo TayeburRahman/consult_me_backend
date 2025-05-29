@@ -23,10 +23,16 @@ const overview = async (req: AuthenticatedRequest, res: Response) => {
           localField: "_id",
           foreignField: "_id",
           as: "user",
+          pipeline: [
+            {
+              $project: {
+                password_hash: 0,
+              },
+            },
+          ],
         },
       },
       { $unwind: "$user" },
-      // Populate the service field
       {
         $lookup: {
           from: "categories",
@@ -38,20 +44,16 @@ const overview = async (req: AuthenticatedRequest, res: Response) => {
       {
         $unwind: {
           path: "$service",
-          preserveNullAndEmptyArrays: true, // if user.service can be null
+          preserveNullAndEmptyArrays: true,
         },
       },
       {
         $project: {
           _id: 0,
-          userId: "$_id",
           averageRating: 1,
           ratingCount: "$count",
-          name: "$user.name",
-          email: "$user.email",
-          photo_url: "$user.photo_url",
-          price: "$user.price",
-          service: "$service.name",
+          user: "$user",
+          service: "$service",
         },
       },
     ]);
