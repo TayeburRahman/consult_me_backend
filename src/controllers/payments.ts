@@ -42,7 +42,7 @@ const stripe_webhook = async (req: Request, res: Response): Promise<void> => {
       });
 
       const booking = await Booking.findOneAndUpdate(
-        { userId: session.client_reference_id },
+        { user: session.client_reference_id },
         {
           stripe_status: session.payment_status,
           transaction_id: session.id,
@@ -57,6 +57,7 @@ const stripe_webhook = async (req: Request, res: Response): Promise<void> => {
         );
 
         consultant.stripeAccountId = stripeAccount.accountId;
+        await consultant.save();
       }
 
       //   triggerNotification("PAYMENT_SUCCESS", {
