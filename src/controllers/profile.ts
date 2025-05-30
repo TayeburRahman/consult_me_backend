@@ -70,6 +70,7 @@ const get_profile = async (req: AuthenticatedRequest, res: Response) => {
     },
     client_count: client_count || null,
     stripeOnboardingDone: profile.stripeOnboardingDone || null,
+    balance: profile.balance || 0,
   };
 
   res.status(200).json({

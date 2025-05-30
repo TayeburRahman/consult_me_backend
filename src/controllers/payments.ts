@@ -51,6 +51,11 @@ const stripe_webhook = async (req: Request, res: Response): Promise<void> => {
 
       const consultant = await User.findById(booking?.consultant);
 
+      if (consultant) {
+        consultant.balance += (session.amount_total ?? 0) / 100;
+        await consultant.save();
+      }
+
       if (consultant && consultant?.email && !consultant?.stripeAccountId) {
         const stripeAccount = await createStripeConnectExpressAccount(
           consultant?.email
