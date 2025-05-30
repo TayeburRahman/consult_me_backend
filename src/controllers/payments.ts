@@ -168,7 +168,13 @@ const withdraw_history = async (
 
   res.status(200).json({
     message: "Withdrawals fetched successfully",
-    data: withdrawals,
+    data: withdrawals.map((withdrawal) => ({
+      user: withdrawal.user || null,
+      amount: withdrawal.amount || null,
+      status: withdrawal.status || null,
+      transaction_id: withdrawal.transaction_id || null,
+      createdAt: withdrawal.createdAt || null,
+    })),
   });
 };
 

@@ -259,25 +259,28 @@ const PaymentSchema = new Schema({
   },
 });
 
-const WithdrawSchema = new Schema({
-  user: {
-    type: Types.ObjectId,
-    ref: "User",
-    required: true,
+const WithdrawSchema = new Schema(
+  {
+    user: {
+      type: Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "completed", "failed"],
+      default: "pending",
+    },
+    transaction_id: {
+      type: String,
+    },
   },
-  amount: {
-    type: Number,
-    required: true,
-  },
-  status: {
-    type: String,
-    enum: ["pending", "completed", "failed"],
-    default: "pending",
-  },
-  transaction_id: {
-    type: String,
-  },
-});
+  { timestamps: true }
+);
 
 const User = model("User", UserSchema);
 const OTP = model("OTP", OTPSchema);
