@@ -219,8 +219,7 @@ const get_withdraw_requests = async (req: Request, res: Response) => {
 };
 
 const update_withdraw_request = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { status } = req.body;
+  const { id, status } = req.body;
 
   if (!status || !["pending", "completed", "failed"].includes(status)) {
     res.status(400).json({
