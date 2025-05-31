@@ -8,7 +8,7 @@ const registerUserRoutes = (app: Express) => {
   app.use("/auth", userRoutes.authRoutes);
   app.use(
     "/category",
-    authorize(["user", "consultant"]),
+    // authorize(["user", "consultant"]),
     userRoutes.categoryRoutes
   );
   app.use("/consultant", authorize(["user"]), userRoutes.consultantRoutes);

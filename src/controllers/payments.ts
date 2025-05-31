@@ -201,7 +201,16 @@ const transfer_funds = async (req: Request, res: Response): Promise<void> => {
 };
 
 const get_withdraw_requests = async (req: Request, res: Response) => {
-  const withdrawal_requests = await Withdraw.find().sort({ createdAt: -1 });
+  const withdrawal_requests = await Withdraw.find()
+    .sort({ createdAt: -1 })
+    .populate({
+      path: "user",
+      select: "name email service phone city country",
+      populate: {
+        path: "service",
+        select: "name",
+      },
+    });
 
   res.status(200).json({
     message: "Withdraw requests fetched successfully",
