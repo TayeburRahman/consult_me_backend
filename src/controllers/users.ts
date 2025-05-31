@@ -2,12 +2,22 @@ import { Request, Response } from "express";
 import { User } from "../schema";
 
 const get_users = async (req: Request, res: Response) => {
-  const { page, limit } = req.query;
+  const { page, limit, query } = req.query;
   const pageNumber = parseInt(page as string) || 1;
   const limitNumber = parseInt(limit as string) || 10;
   const offset = (pageNumber - 1) * limitNumber;
   const users = await User.find(
-    { role: "user" },
+    {
+      role: "user",
+      ...(query
+        ? {
+            $or: [
+              { name: { $regex: query, $options: "i" } },
+              { email: { $regex: query, $options: "i" } },
+            ],
+          }
+        : {}),
+    },
     { password_hash: 0, __v: 0, role: 0 }
   )
     .skip(offset)
@@ -31,12 +41,22 @@ const get_users = async (req: Request, res: Response) => {
 };
 
 const get_consultants = async (req: Request, res: Response) => {
-  const { page, limit } = req.query;
+  const { page, limit, query } = req.query;
   const pageNumber = parseInt(page as string) || 1;
   const limitNumber = parseInt(limit as string) || 10;
   const offset = (pageNumber - 1) * limitNumber;
   const users = await User.find(
-    { role: "consultant" },
+    {
+      role: "consultant",
+      ...(query
+        ? {
+            $or: [
+              { name: { $regex: query, $options: "i" } },
+              { email: { $regex: query, $options: "i" } },
+            ],
+          }
+        : {}),
+    },
     { password_hash: 0, __v: 0, role: 0 }
   )
     .skip(offset)
