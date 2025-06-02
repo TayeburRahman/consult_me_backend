@@ -1,6 +1,6 @@
 import { AuthenticatedRequest } from "@middleware/auth";
 import { Response } from "express";
-import { Booking, Rating } from "../schema";
+import { Booking, Notification, Rating, User } from "../schema";
 
 const overview = async (req: AuthenticatedRequest, res: Response) => {
   const id = req.user?.id;
@@ -124,4 +124,45 @@ const overview = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-export { overview };
+const admin_dashboard = async (req: AuthenticatedRequest, res: Response) => {
+  const { user_year, consult_year, earning_year } = req.query;
+
+  const totalEarningsResult = await Booking.aggregate([
+    {
+      $match: {
+        stripe_status: "paid",
+      },
+    },
+    {
+      $lookup: {
+        from: "users", // the collection name for UserSchema, usually 'users'
+        localField: "consultant",
+        foreignField: "_id",
+        as: "consultant_data",
+      },
+    },
+    {
+      $unwind: "$consultant_data", // since lookup returns an array, unwind to get the object
+    },
+    {
+      $group: {
+        _id: null,
+        total_earnings: { $sum: "$consultant_data.price" },
+      },
+    },
+  ]);
+  const total_earnings = totalEarningsResult[0]?.total_earnings || 0;
+
+  const data = {
+    total_users: await User.countDocuments({ role: "user" }),
+    total_consultants: await User.countDocuments({ role: "consultant" }),
+    total_earnings,
+  };
+
+  res.status(200).json({
+    message: "Admin dashboard fetched successfully",
+    data,
+  });
+};
+
+export { overview, admin_dashboard };

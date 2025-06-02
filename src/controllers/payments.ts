@@ -201,8 +201,15 @@ const transfer_funds = async (req: Request, res: Response): Promise<void> => {
 };
 
 const get_withdraw_requests = async (req: Request, res: Response) => {
+  const { page, limit } = req.query;
+  const pageNumber = parseInt(page as string) || 1;
+  const limitNumber = parseInt(limit as string) || 10;
+  const offset = (pageNumber - 1) * limitNumber;
+
   const withdrawal_requests = await Withdraw.find()
     .sort({ createdAt: -1 })
+    .skip(offset)
+    .limit(limitNumber)
     .populate({
       path: "user",
       select: "name email service phone city country",
@@ -212,9 +219,19 @@ const get_withdraw_requests = async (req: Request, res: Response) => {
       },
     });
 
+  const meta = {
+    page: pageNumber,
+    limit: limitNumber,
+    total: await Withdraw.countDocuments(),
+    totalPages: Math.ceil((await Withdraw.countDocuments()) / limitNumber),
+    hasNextPage:
+      pageNumber < Math.ceil((await Withdraw.countDocuments()) / limitNumber),
+  };
+
   res.status(200).json({
     message: "Withdraw requests fetched successfully",
     data: withdrawal_requests,
+    meta,
   });
 };
 

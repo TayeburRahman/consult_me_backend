@@ -195,7 +195,7 @@ const BookingSchema = new Schema({
   },
   stripe_status: {
     type: String,
-    enum: ["pending", "succeeded", "failed"],
+    enum: ["pending", "paid", "failed"],
     default: "pending",
   },
 });
