@@ -42,7 +42,7 @@ io.on("connection", (socket) => {
           { sender: sender, recipient: recipient },
           { sender: recipient, recipient: sender },
         ],
-      }).sort({ createdAt: 1 });
+      }).sort({ createdAt: -1 });
 
       // Send the updated message history to both the sender and recipient
       io.to(active_users[sender]).emit("message_history", messages);
