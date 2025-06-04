@@ -214,7 +214,6 @@ const MessageSchema = new Schema(
     },
     content: {
       type: String,
-      required: true,
     },
     is_read: {
       type: Boolean,
