@@ -31,7 +31,7 @@ const signup = async (req: Request, res: Response) => {
     return;
   }
 
-  if (!["user", "consultant"].includes(type)) {
+  if (!["user", "consultant", "admin"].includes(type)) {
     res.status(400).json({
       message:
         "Invalid user type. Only 'user' and 'consultant' are valid types.",
