@@ -108,7 +108,7 @@ const NotificationSchema = new Schema(
       default: false,
     },
     recipientId: { type: Types.ObjectId, ref: "User" },
-    recipientRole: { type: String, required: true },
+    recipientRole: { type: String },
     createdAt: {
       type: Date,
       default: Date.now,
