@@ -101,10 +101,9 @@ const NotificationSchema = new Schema(
     description: {
       type: String,
     },
-    type: { type: String, required: true },
+    type: { type: String },
     isRead: {
       type: Boolean,
-      required: true,
       default: false,
     },
     recipientId: { type: Types.ObjectId, ref: "User" },
