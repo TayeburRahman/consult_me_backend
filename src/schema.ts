@@ -100,7 +100,6 @@ const NotificationSchema = new Schema(
     },
     description: {
       type: String,
-      required: true,
     },
     type: { type: String, required: true },
     isRead: {
