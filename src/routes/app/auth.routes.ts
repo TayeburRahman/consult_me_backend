@@ -6,8 +6,10 @@ import {
   resend,
   reset_password,
   signup,
+  swishAccounts,
   verify_otp,
 } from "@controllers/auth";
+import authorize from "@middleware/auth";
 
 const router = Router();
 
@@ -18,5 +20,7 @@ router.post("/login", login);
 router.post("/forgot-password", forgot_password);
 router.post("/reset-password", reset_password);
 router.post("/refresh-token", refresh_token);
+router.patch("/swish_accounts", authorize(["user", "consultant"]), swishAccounts);
+
 
 export default router;

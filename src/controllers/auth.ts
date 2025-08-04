@@ -11,6 +11,7 @@ import { comparePassword, plainPasswordToHash } from "@utils/password";
 import validateRequiredFields from "@utils/validateRequiredFields";
 import { Request, Response } from "express";
 import { Category, User } from "../schema";
+import { AuthenticatedRequest } from "@middleware/auth";
 
 const signup = async (req: Request, res: Response) => {
   const {
@@ -84,6 +85,34 @@ const signup = async (req: Request, res: Response) => {
     otp: process.env.NODE_ENV === "development" ? otp : undefined,
   });
 };
+const swishAccounts = async (req: AuthenticatedRequest, res: Response) => {
+  const user_id = req?.user?.id;
+  const swishRole = req?.query?.swishRole as string;
+  if (!["user", "consultant"].includes(swishRole as string)) {
+    res.status(400).json({ message: "Invalid swish role" });
+    return;
+  }
+  const user = await User.findById(user_id);
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+  user.role = swishRole as "user" | "consultant";
+  await user.save();
+  const accessToken = generateAccessToken(
+    user._id.toString(),
+    user.email,
+    user.role
+  );
+
+  const refreshToken = generateRefreshToken(user.email, user.role, true);
+  res.status(200).json({
+    message: "Swish account updated successfully",
+    accessToken,
+    refreshToken,
+  })
+
+}
 const verify_otp = async (req: Request, res: Response) => {
   const { email, otp } = req?.body || {};
 
@@ -262,4 +291,5 @@ export {
   reset_password,
   refresh_token,
   resend,
+  swishAccounts
 };
