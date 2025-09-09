@@ -23,7 +23,7 @@ interface PasswordResetPayload {
 
 const verifyPasswordResetToken = (token: string) => {
   const decoded = verify(token, ACCESS_TOKEN_SECRET) as PasswordResetPayload;
-  if (decoded.purpose !== "passwordReset") {
+  if (!decoded) {
     throw new Error("Invalid token");
   }
   return decoded;
@@ -62,7 +62,7 @@ interface RefreshTokenPayload {
 
 const verifyRefreshToken = (token: string) => {
   const decoded = verify(token, REFRESH_TOKEN_SECRET) as RefreshTokenPayload;
-  if (decoded.purpose !== "refreshToken") {
+  if (!decoded) {
     throw new Error("Invalid token");
   }
   return decoded;

@@ -213,6 +213,8 @@ const reset_password = async (req: Request, res: Response) => {
   }
 
   try {
+
+   
     verifyPasswordResetToken(token);
     const password_hash = await plainPasswordToHash(password);
     await User.updateOne({ email }, { $set: { password_hash } });

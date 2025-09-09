@@ -90,12 +90,15 @@ const book_an_appointment = async (
   const { consultant_id, date, time, remind_before } = req.body;
   const user_id = req.user?.id;
 
+  console.log({ consultant_id, date, time, remind_before, user_id });
+
   if (!consultant_id || !date || !time || !remind_before || !user_id) {
     res.status(400).json({ message: "All fields are required" });
     return;
   }
 
   const consultant = await User.findById(consultant_id);
+  console.log(consultant);
 
   if (!consultant) {
     res.status(404).json({ message: "Consultant not found" });
@@ -115,25 +118,43 @@ const book_an_appointment = async (
   }
 
   const dayOfWeek = new Date(date).getDay();
+  console.log("..... ............................ ......");
+  console.log(dayOfWeek);
+
+  console.log("..... ............................ ......");
+
+  console.log(consultant.available_times[dayOfWeek]);
+
+  if (
+    !consultant.available_times ||
+    !consultant.available_times[dayOfWeek] ||
+    !consultant.available_times[dayOfWeek].time
+  ) {
+    res.status(400).json({
+      message: `No available times set for this day (${dayOfWeek}).`,
+    });
+    return;
+  }
+
   const availableTimes = consultant.available_times[dayOfWeek].time;
-  const [startTime, endTime] = availableTimes?.split("-");
+  const [startTime, endTime] = availableTimes.split("-");
 
-  // Check if the selected time (22:00) is within the range (startTime: 20:00, endTime: 23:00)
-
+  // Check if the selected time is within the range
   const selectedTime = new Date(date);
   const start = new Date(date);
   const end = new Date(date);
+
   start.setHours(
-    parseInt(startTime?.split(":")[0]),
-    parseInt(startTime?.split(":")[1])
+    parseInt(startTime.split(":")[0]),
+    parseInt(startTime.split(":")[1])
   );
   end.setHours(
-    parseInt(endTime?.split(":")[0]),
-    parseInt(endTime?.split(":")[1])
+    parseInt(endTime.split(":")[0]),
+    parseInt(endTime.split(":")[1])
   );
   selectedTime.setHours(
-    parseInt(time?.split(":")[0]),
-    parseInt(time?.split(":")[1])
+    parseInt(time.split(":")[0]),
+    parseInt(time.split(":")[1])
   );
 
   if (selectedTime < start || selectedTime > end) {
