@@ -207,6 +207,58 @@ const book_an_appointment = async (
   res.json({ message: "Booking created successfully", data: stripe.url });
 };
 
+const create_booking_consultant = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  const consultant_id = req.user?.id;
+  const { day, time } = req.body;
+
+  if (!day || !time) {
+    res.status(400).json({ message: "Day and time are required" });
+    return;
+  }
+  console.log({
+    consultant_id,
+    day,
+    time,
+  });
+
+  // Check if this consultant already has that day & time
+  const existing = await User.findOne({
+    _id: consultant_id,
+    "available_times.day": day,
+    "available_times.time": time,
+  });
+
+  if (existing) {
+    res.status(400).json({
+      message: "This time slot already exists for the selected day",
+    });
+    return;
+  }
+
+  // // Otherwise, push new availability
+  const updatedUser = await User.findByIdAndUpdate(
+    consultant_id,
+    { $push: { available_times: { day, time } } },
+    { new: true }
+  );
+
+  if (!updatedUser) {
+    res.status(404).json({ message: "Consultant not found" });
+    return;
+  }
+
+  res.status(200).json({
+    message: "Available time recorded",
+    data: {
+      consultant_id,
+      available_time: { day, time },
+    },
+  });
+};
+
 const get_user_bookings = async (req: AuthenticatedRequest, res: Response) => {
   const user_id = req.user?.id;
   const { type } = req.query;
@@ -309,4 +361,5 @@ export {
   book_an_appointment,
   get_user_bookings,
   reschedule_booking,
+  create_booking_consultant,
 };

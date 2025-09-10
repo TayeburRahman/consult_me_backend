@@ -32,6 +32,13 @@ const signup = async (req: Request, res: Response) => {
     return;
   }
 
+  if (password.length !== 8) {
+    res
+      .status(400)
+      .json({ message: "Password must be exactly 8 characters long" });
+    return;
+  }
+
   if (!["user", "consultant", "admin"].includes(type)) {
     res.status(400).json({
       message:
@@ -110,9 +117,8 @@ const swishAccounts = async (req: AuthenticatedRequest, res: Response) => {
     message: "Swish account updated successfully",
     accessToken,
     refreshToken,
-  })
-
-}
+  });
+};
 const verify_otp = async (req: Request, res: Response) => {
   const { email, otp } = req?.body || {};
 
@@ -213,8 +219,6 @@ const reset_password = async (req: Request, res: Response) => {
   }
 
   try {
-
-   
     verifyPasswordResetToken(token);
     const password_hash = await plainPasswordToHash(password);
     await User.updateOne({ email }, { $set: { password_hash } });
@@ -293,5 +297,5 @@ export {
   reset_password,
   refresh_token,
   resend,
-  swishAccounts
+  swishAccounts,
 };
