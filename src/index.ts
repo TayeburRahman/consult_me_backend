@@ -33,7 +33,7 @@ startDB();
 // Init express app
 const app = express();
 app.use(cors({ origin: "*" }));
-registerWebhookRoutes(app); // Should be before body parsing if needed
+registerWebhookRoutes(app);
 app.use(express.json());
 app.use(logger);
 

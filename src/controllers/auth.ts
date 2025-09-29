@@ -25,6 +25,7 @@ const signup = async (req: Request, res: Response) => {
     years_of_experience,
     service_id,
   } = req?.body || {};
+  console.log("======", req.body);
 
   const error = validateRequiredFields({ name, email, password, type, phone });
   if (error) {
@@ -85,6 +86,7 @@ const signup = async (req: Request, res: Response) => {
     otp: process.env.NODE_ENV === "development" ? otp : undefined,
   });
 };
+
 const swishAccounts = async (req: AuthenticatedRequest, res: Response) => {
   const user_id = req?.user?.id;
   const swishRole = req?.query?.swishRole as string;
@@ -113,6 +115,7 @@ const swishAccounts = async (req: AuthenticatedRequest, res: Response) => {
   })
 
 }
+
 const verify_otp = async (req: Request, res: Response) => {
   const { email, otp } = req?.body || {};
 
@@ -144,6 +147,7 @@ const verify_otp = async (req: Request, res: Response) => {
     return;
   }
 };
+
 const login = async (req: Request, res: Response) => {
   const { email, password, remember_me } = req?.body || {};
 
@@ -181,6 +185,7 @@ const login = async (req: Request, res: Response) => {
     .status(200)
     .json({ message: "Login successful", accessToken, refreshToken });
 };
+
 const forgot_password = async (req: Request, res: Response) => {
   const { email } = req?.body || {};
 
@@ -203,6 +208,7 @@ const forgot_password = async (req: Request, res: Response) => {
     otp: process.env.NODE_ENV === "development" ? otp : undefined,
   });
 };
+
 const reset_password = async (req: Request, res: Response) => {
   const { email, password, token } = req?.body || {};
 
@@ -223,6 +229,7 @@ const reset_password = async (req: Request, res: Response) => {
     return;
   }
 };
+
 const refresh_token = async (req: Request, res: Response) => {
   const refreshToken = req.headers.authorization?.split(" ")[1];
 
@@ -253,6 +260,7 @@ const refresh_token = async (req: Request, res: Response) => {
     return;
   }
 };
+
 const resend = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email: emailFromBody, type } = req.body || {};

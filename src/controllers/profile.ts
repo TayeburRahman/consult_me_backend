@@ -78,6 +78,7 @@ const get_profile = async (req: AuthenticatedRequest, res: Response) => {
     data: profileData,
   });
 };
+
 const update_profile = async (req: AuthenticatedRequest, res: Response) => {
   const role = req.user?.role;
   const {
@@ -129,6 +130,7 @@ const update_profile = async (req: AuthenticatedRequest, res: Response) => {
     res.status(200).json({
       message: "Profile updated successfully",
     });
+
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -136,6 +138,7 @@ const update_profile = async (req: AuthenticatedRequest, res: Response) => {
     });
   }
 };
+
 const change_password = async (req: AuthenticatedRequest, res: Response) => {
   const { old_password, new_password } = req.body;
 

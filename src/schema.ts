@@ -179,7 +179,7 @@ const BookingSchema = new Schema({
     required: true,
   },
   remind_before: {
-    type: String,
+    type: Number,
     enum: [5, 10, 15, 30],
     default: 5,
   },

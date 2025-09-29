@@ -16,6 +16,8 @@ const get_available_slots = async (req: Request, res: Response) => {
     return;
   }
 
+  console.log("Fetching available slots for:", consultant_id, date);
+
   const consultant = await User.findById(consultant_id);
 
   if (!consultant) {
@@ -44,16 +46,17 @@ const get_available_slots = async (req: Request, res: Response) => {
   }
 
   const dayOfWeek = new Date(date as string).getDay();
-  const availableTimes = consultant.available_times[dayOfWeek].time;
+  const dayAvailability = consultant.available_times?.[dayOfWeek];
 
-  if (!availableTimes) {
-    res
-      .status(400)
-      .json({ message: "This consultant hasn't set their availability" });
+  if (!dayAvailability || !dayAvailability.time) {
+    res.status(400).json({
+      message: "This consultant hasn't set their availability for this day",
+    });
     return;
   }
 
-  const [startTime, endTime] = availableTimes?.split("-");
+
+  const [startTime, endTime] = dayAvailability.time.split("-");
 
   const availableSlots = []; // [09:00, 10:00, 11:00, 12:00, 13:00, 14:00, 15:00, 16:00]
 
@@ -83,107 +86,219 @@ const get_available_slots = async (req: Request, res: Response) => {
   });
 };
 
+// const book_an_appointment = async (
+//   req: AuthenticatedRequest,
+//   res: Response
+// ) => {
+//   const { consultant_id, date, time, remind_before } = req.body;
+//   const user_id = req.user?.id;
+
+//   console.log("Booking request body:", req.body, user_id);
+
+//   if (!consultant_id || !date || !time || !remind_before || !user_id) {
+//     res.status(400).json({ message: "All fields are required" });
+//     return;
+//   }
+
+//   const consultant = await User.findById(consultant_id);
+
+//   if (!consultant) {
+//     res.status(404).json({ message: "Consultant not found" });
+//     return;
+//   }
+
+//   const existingBooking = await Booking.findOne({
+//     consultant: consultant_id,
+//     date,
+//     time,
+//     status: "upcoming",
+//   });
+
+//   if (existingBooking) {
+//     res.status(400).json({ message: "Slot already booked" });
+//     return;
+//   }
+
+//   const dayOfWeek = new Date(date).getDay();
+//   const availableTimes = consultant.available_times[dayOfWeek].time;
+//   const [startTime, endTime] = availableTimes?.split("-");
+
+//   // Check if the selected time (22:00) is within the range (startTime: 20:00, endTime: 23:00)
+
+//   const selectedTime = new Date(date);
+//   const start = new Date(date);
+//   const end = new Date(date);
+//   start.setHours(
+//     parseInt(startTime?.split(":")[0]),
+//     parseInt(startTime?.split(":")[1])
+//   );
+//   end.setHours(
+//     parseInt(endTime?.split(":")[0]),
+//     parseInt(endTime?.split(":")[1])
+//   );
+//   selectedTime.setHours(
+//     parseInt(time?.split(":")[0]),
+//     parseInt(time?.split(":")[1])
+//   );
+
+//   if (selectedTime < start || selectedTime > end) {
+//     res.status(400).json({
+//       message: `Selected time is not available. Available times are: ${availableTimes}`,
+//     });
+//     return;
+//   }
+
+//   const booking = await Booking.create({
+//     consultant: consultant_id,
+//     date,
+//     time,
+//     remind_before,
+//     user: user_id,
+//   });
+
+//   console.log("Created booking:", booking);
+
+//   if (!booking) {
+//     res.status(500).json({ message: "Failed to create booking" });
+//     return;
+//   }
+
+//   if (!consultant.price) {
+//     res.status(400).json({ message: "Consultant price not found" });
+//     return;
+//   }
+
+//   const stripe: any = await createCheckoutSession({
+//     userId: user_id,
+//     booking_id: booking._id.toString(),
+//     line_items: [
+//       {
+//         price_data: {
+//           currency: "usd",
+//           product_data: {
+//             name: "Consult Me Payment",
+//           },
+//           unit_amount: consultant.price * 100,
+//         },
+//         quantity: 1,
+//       },
+//     ],
+//   });
+
+//   if (stripe instanceof Error) {
+//     res.status(500).json({ message: "Failed to create Stripe session" });
+//     return;
+//   }
+
+//   res.json({ message: "Booking created successfully", data: stripe.url });
+// };
+
 const book_an_appointment = async (
   req: AuthenticatedRequest,
   res: Response
-) => {
-  const { consultant_id, date, time, remind_before } = req.body;
-  const user_id = req.user?.id;
+): Promise<void> => {
+  try {
+    const { consultant_id, date, time, remind_before } = req.body;
+    const user_id = req.user?.id;
 
-  if (!consultant_id || !date || !time || !remind_before || !user_id) {
-    res.status(400).json({ message: "All fields are required" });
-    return;
-  }
+    if (!consultant_id || !date || !time || !remind_before || !user_id) {
+      res.status(400).json({ message: "All fields are required" });
+      return;
+    }
 
-  const consultant = await User.findById(consultant_id);
+    const consultant = await User.findById(consultant_id);
+    if (!consultant) {
+      res.status(404).json({ message: "Consultant not found" });
+      return;
+    }
 
-  if (!consultant) {
-    res.status(404).json({ message: "Consultant not found" });
-    return;
-  }
-
-  const existingBooking = await Booking.findOne({
-    consultant: consultant_id,
-    date,
-    time,
-    status: "upcoming",
-  });
-
-  if (existingBooking) {
-    res.status(400).json({ message: "Slot already booked" });
-    return;
-  }
-
-  const dayOfWeek = new Date(date).getDay();
-  const availableTimes = consultant.available_times[dayOfWeek].time;
-  const [startTime, endTime] = availableTimes?.split("-");
-
-  // Check if the selected time (22:00) is within the range (startTime: 20:00, endTime: 23:00)
-
-  const selectedTime = new Date(date);
-  const start = new Date(date);
-  const end = new Date(date);
-  start.setHours(
-    parseInt(startTime?.split(":")[0]),
-    parseInt(startTime?.split(":")[1])
-  );
-  end.setHours(
-    parseInt(endTime?.split(":")[0]),
-    parseInt(endTime?.split(":")[1])
-  );
-  selectedTime.setHours(
-    parseInt(time?.split(":")[0]),
-    parseInt(time?.split(":")[1])
-  );
-
-  if (selectedTime < start || selectedTime > end) {
-    res.status(400).json({
-      message: `Selected time is not available. Available times are: ${availableTimes}`,
+    const existingBooking = await Booking.findOne({
+      consultant: consultant_id,
+      date,
+      time,
+      status: "upcoming",
     });
-    return;
-  }
 
-  const booking = await Booking.create({
-    consultant: consultant_id,
-    date,
-    time,
-    remind_before,
-    user: user_id,
-  });
+    if (existingBooking) {
+      res.status(400).json({ message: "Slot already booked" });
+      return;
+    }
 
-  if (!booking) {
-    res.status(500).json({ message: "Failed to create booking" });
-    return;
-  }
+    // Time validation
+    const dayOfWeek = new Date(date).getDay();
+    const availableTimes = consultant.available_times?.[dayOfWeek]?.time;
+    if (!availableTimes) {
+      res.status(400).json({ message: "Consultant not available that day" });
+      return;
+    }
 
-  if (!consultant.price) {
-    res.status(400).json({ message: "Consultant price not found" });
-    return;
-  }
+    const [startTime, endTime] = availableTimes.split("-");
+    const selectedTime = new Date(date);
+    const start = new Date(date);
+    const end = new Date(date);
 
-  const stripe: any = await createCheckoutSession({
-    userId: user_id,
-    booking_id: booking._id.toString(),
-    line_items: [
-      {
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: "Consult Me Payment",
+    start.setHours(
+      parseInt(startTime.split(":")[0]),
+      parseInt(startTime.split(":")[1])
+    );
+    end.setHours(
+      parseInt(endTime.split(":")[0]),
+      parseInt(endTime.split(":")[1])
+    );
+    selectedTime.setHours(
+      parseInt(time.split(":")[0]),
+      parseInt(time.split(":")[1])
+    );
+
+    if (selectedTime < start || selectedTime > end) {
+      res.status(400).json({
+        message: `Selected time is not available. Available times are: ${availableTimes}`,
+      });
+      return;
+    }
+
+    const booking = await Booking.create({
+      consultant: consultant_id,
+      date,
+      time,
+      remind_before,
+      user: user_id,
+    });
+
+    if (!consultant.price) {
+      res.status(400).json({ message: "Consultant price not found" });
+      return;
+    }
+
+    const stripe = await createCheckoutSession({
+      userId: user_id.toString(),
+      booking_id: booking._id.toString(),
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: { name: "Consult Me Payment" },
+            unit_amount: consultant.price * 100,
           },
-          unit_amount: consultant.price * 100,
+          quantity: 1,
         },
-        quantity: 1,
-      },
-    ],
-  });
+      ],
+    });
 
-  if (stripe instanceof Error) {
-    res.status(500).json({ message: "Failed to create Stripe session" });
-    return;
+    if (stripe instanceof Error) {
+      res.status(500).json({ message: "Failed to create Stripe session" });
+      return;
+    }
+
+    res.json({
+      message: "Booking created successfully",
+      // @ts-ignore
+      data: stripe.url,
+    });
+  } catch (error) {
+    console.error("Booking error:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
-
-  res.json({ message: "Booking created successfully", data: stripe.url });
 };
 
 const get_user_bookings = async (req: AuthenticatedRequest, res: Response) => {

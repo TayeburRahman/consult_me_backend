@@ -6,16 +6,17 @@ const get_users = async (req: Request, res: Response) => {
   const pageNumber = parseInt(page as string) || 1;
   const limitNumber = parseInt(limit as string) || 10;
   const offset = (pageNumber - 1) * limitNumber;
+
   const users = await User.find(
     {
       role: "user",
       ...(query
         ? {
-            $or: [
-              { name: { $regex: query, $options: "i" } },
-              { email: { $regex: query, $options: "i" } },
-            ],
-          }
+          $or: [
+            { name: { $regex: query, $options: "i" } },
+            { email: { $regex: query, $options: "i" } },
+          ],
+        }
         : {}),
     },
     { password_hash: 0, __v: 0, role: 0 }
@@ -50,11 +51,11 @@ const get_consultants = async (req: Request, res: Response) => {
       role: "consultant",
       ...(query
         ? {
-            $or: [
-              { name: { $regex: query, $options: "i" } },
-              { email: { $regex: query, $options: "i" } },
-            ],
-          }
+          $or: [
+            { name: { $regex: query, $options: "i" } },
+            { email: { $regex: query, $options: "i" } },
+          ],
+        }
         : {}),
     },
     { password_hash: 0, __v: 0, role: 0 }
