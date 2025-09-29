@@ -33,6 +33,13 @@ const signup = async (req: Request, res: Response) => {
     return;
   }
 
+  if (password.length !== 8) {
+    res
+      .status(400)
+      .json({ message: "Password must be exactly 8 characters long" });
+    return;
+  }
+
   if (!["user", "consultant", "admin"].includes(type)) {
     res.status(400).json({
       message:
@@ -88,34 +95,46 @@ const signup = async (req: Request, res: Response) => {
 };
 
 const swishAccounts = async (req: AuthenticatedRequest, res: Response) => {
-  const user_id = req?.user?.id;
-  const swishRole = req?.query?.swishRole as string;
-  if (!["user", "consultant"].includes(swishRole as string)) {
-    res.status(400).json({ message: "Invalid swish role" });
-    return;
+  try {
+    const user_id = req?.user?.id;
+    const swishRole = req?.query?.swishRole as string;
+
+    //  console.log("body role", req.body)
+    //   console.log('query role : ',swishRole) 
+    if (!["user", "consultant"].includes(swishRole as string)) {
+      res.status(400).json({ message: "Invalid swish role" });
+      return;
+    }
+    const user = await User.findById(user_id);
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+    user.role = req?.body?.swishRole;
+
+    // console.log('database role ',user.role)
+    await user.save();
+    const accessToken = generateAccessToken(
+      user._id.toString(),
+      user.email,
+      user.role
+    );
+
+    const refreshToken = generateRefreshToken(user.email, user.role, true);
+    res.status(200).json({
+      message: "Swish account updated successfully",
+      accessToken,
+      refreshToken,
+    });
+  } catch (error: any) {
+
+    throw new Error(error?.message)
+
   }
-  const user = await User.findById(user_id);
-  if (!user) {
-    res.status(404).json({ message: "User not found" });
-    return;
+  finally {
+    console.log("finnaly  aggain running ")
   }
-  user.role = swishRole as "user" | "consultant";
-  await user.save();
-  const accessToken = generateAccessToken(
-    user._id.toString(),
-    user.email,
-    user.role
-  );
-
-  const refreshToken = generateRefreshToken(user.email, user.role, true);
-  res.status(200).json({
-    message: "Swish account updated successfully",
-    accessToken,
-    refreshToken,
-  })
-
-}
-
+};
 const verify_otp = async (req: Request, res: Response) => {
   const { email, otp } = req?.body || {};
 
@@ -299,5 +318,5 @@ export {
   reset_password,
   refresh_token,
   resend,
-  swishAccounts
+  swishAccounts,
 };

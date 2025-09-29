@@ -16,6 +16,6 @@ const upload = multer({
 router.get("/", get_categories);
 router.post("/add", upload.single("icon"), add_category);
 router.patch("/update", upload.single("icon"), update_category);
-router.delete("/delete", upload.single("icon"), delete_category);
+router.delete("/delete", delete_category);
 
 export default router;
