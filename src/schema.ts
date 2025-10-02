@@ -37,13 +37,8 @@ const UserSchema = new Schema(
     },
     available_times: [
       {
-        day: {
-          type: String,
-        },
-        time: {
-          type: String,
-          default: null,
-        },
+        type: Schema.Types.Mixed,
+        required: false,
       },
     ],
     service: {

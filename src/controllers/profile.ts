@@ -99,6 +99,8 @@ const update_profile = async (req: AuthenticatedRequest, res: Response) => {
   const isConsultant = role === "consultant";
   const photo = req.file;
 
+  console.log(req.body);
+
   let photo_url;
   try {
     if (photo) {
@@ -123,8 +125,11 @@ const update_profile = async (req: AuthenticatedRequest, res: Response) => {
       ...(isConsultant && service && { service }),
       ...(isConsultant && price && { price }),
       ...(isConsultant && about && { about }),
-      ...(isConsultant &&
-        available_times && { available_times: JSON.parse(available_times) }),
+      ...(isConsultant && available_times && {
+        available_times: typeof available_times === "string"
+          ? JSON.parse(available_times.replace(/;$/, ""))
+          : available_times
+      }),
     });
 
     res.status(200).json({
