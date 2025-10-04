@@ -105,12 +105,12 @@ const swishAccounts = async (req: AuthenticatedRequest, res: Response) => {
       res.status(400).json({ message: "Invalid swish role" });
       return;
     }
-    const user = await User.findById(user_id);
+    const user = await User.findById(user_id) as any;
     if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
     }
-    user.role = req?.body?.swishRole;
+    user.role = swishRole;
 
     // console.log('database role ',user.role)
     await user.save();
