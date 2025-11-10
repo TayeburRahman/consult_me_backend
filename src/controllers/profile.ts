@@ -81,6 +81,7 @@ const get_profile = async (req: AuthenticatedRequest, res: Response) => {
 
 const update_profile = async (req: AuthenticatedRequest, res: Response) => {
   const role = req.user?.role;
+
   const {
     name,
     email,
@@ -96,6 +97,7 @@ const update_profile = async (req: AuthenticatedRequest, res: Response) => {
     lat,
     lng,
   } = req.body;
+
   const isConsultant = role === "consultant";
   const photo = req.file;
 

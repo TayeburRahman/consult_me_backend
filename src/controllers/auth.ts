@@ -33,12 +33,8 @@ const signup = async (req: Request, res: Response) => {
     return;
   }
 
-  if (password.length !== 8) {
-    res
-      .status(400)
-      .json({ message: "Password must be exactly 8 characters long" });
-    return;
-  }
+  console.log("password.length", password.length)
+
 
   if (!["user", "consultant", "admin"].includes(type)) {
     res.status(400).json({
