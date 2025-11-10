@@ -25,17 +25,20 @@ const signup = async (req: Request, res: Response) => {
     years_of_experience,
     service_id,
   } = req?.body || {};
-
   console.log("======", req.body);
-  // ==================================================
+
   const error = validateRequiredFields({ name, email, password, type, phone });
   if (error) {
     res.status(400).json({ message: error });
     return;
   }
 
-  console.log("password.length", password.length)
-
+  if (password.length !== 8) {
+    res
+      .status(400)
+      .json({ message: "Password must be exactly 8 characters long" });
+    return;
+  }
 
   if (!["user", "consultant", "admin"].includes(type)) {
     res.status(400).json({
@@ -184,6 +187,13 @@ const login = async (req: Request, res: Response) => {
     return;
   }
 
+
+  if (!user.password_hash) {
+    res.status(400).json({ message: "You have not a valide password! please froget your password" });
+    return;
+  }
+
+
   const isPasswordCorrect = await comparePassword(password, user.password_hash);
   if (!isPasswordCorrect) {
     res.status(400).json({ message: "Invalid password" });
@@ -307,9 +317,90 @@ const resend = async (req: Request, res: Response): Promise<void> => {
     });
   }
 };
+
+const signupWithAuth = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const {
+      name,
+      email,
+      type,
+      phone,
+      lat,
+      lng,
+      photo_url,
+      service_id,
+      auth_provider, // "google" | "apple" | "manual"
+      provider_id,   // google/apple unique id (optional)
+    } = req.body || {};
+
+    // ==================================================
+    // Handle Google or Apple Auth
+    // ==================================================
+    if (auth_provider === "google" || auth_provider === "apple") {
+      if (!email) {
+        res.status(400).json({ message: "Email is required." });
+        return;
+      }
+
+      let user = await User.findOne({ email });
+
+      // Create user if not exists
+      if (!user) {
+        user = await User.create({
+          name,
+          email,
+          role: type || "user",
+          photo_url,
+          phone,
+          lat,
+          lng,
+          service: service_id,
+          auth_provider,
+          provider_id,
+        });
+      }
+
+      if (user.account_status === "Banned") {
+        res.status(403).json({ message: "User is banned." });
+        return;
+      }
+
+      const accessToken = generateAccessToken(
+        user._id.toString(),
+        user.email,
+        user.role
+      );
+      const refreshToken = generateRefreshToken(user.email, user.role, false);
+
+      res.status(200).json({
+        message: "Login successful.",
+        accessToken,
+        refreshToken,
+        user,
+      });
+      return;
+    }
+
+    // ==================================================
+    // Invalid Auth Provider
+    // ==================================================
+    res.status(400).json({
+      message:
+        "Invalid authentication provider. Please use Google or Apple sign-in.",
+    });
+  } catch (err) {
+    console.error("Signup error:", err);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+
 export {
   signup,
   verify_otp,
+  signupWithAuth,
   login,
   forgot_password,
   reset_password,

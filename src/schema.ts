@@ -6,12 +6,18 @@ const UserSchema = new Schema(
     email: { type: String, required: true, unique: true },
     phone: { type: String },
     photo_url: { type: String },
-    password_hash: { type: String, required: true },
+    password_hash: { type: String },
     role: {
       type: String,
       required: true,
       default: "user",
       enum: ["user", "consultant", "admin"],
+    },
+    auth_provider: {
+      type: String
+    },
+    provider_id: {
+      type: String
     },
     account_status: {
       type: String,
@@ -28,7 +34,6 @@ const UserSchema = new Schema(
     lng: {
       type: Number,
     },
-    // consultant fields
     years_of_experience: {
       type: Number,
     },
@@ -65,7 +70,6 @@ const UserSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    // consultant fields
   },
   { timestamps: true }
 );
