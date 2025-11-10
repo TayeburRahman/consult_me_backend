@@ -25,8 +25,9 @@ const signup = async (req: Request, res: Response) => {
     years_of_experience,
     service_id,
   } = req?.body || {};
-  console.log("======", req.body);
 
+  console.log("======", req.body);
+  // ==================================================
   const error = validateRequiredFields({ name, email, password, type, phone });
   if (error) {
     res.status(400).json({ message: error });
