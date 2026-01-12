@@ -9,7 +9,7 @@ import {
 } from "@utils/jwt";
 import { comparePassword, plainPasswordToHash } from "@utils/password";
 import validateRequiredFields from "@utils/validateRequiredFields";
-import { Request, Response } from "express";
+import { Request, RequestHandler, Response } from "express";
 import { Category, User } from "../schema";
 import { AuthenticatedRequest } from "@middleware/auth";
 
@@ -189,7 +189,7 @@ const login = async (req: Request, res: Response) => {
 
 
   if (!user.password_hash) {
-    res.status(400).json({ message: "You have not a valide password! please froget your password" });
+    res.status(400).json({ message: "Some  ! please froget your password" });
     return;
   }
 
@@ -397,7 +397,48 @@ const signupWithAuth = async (
   }
 };
 
+const delete_profile: RequestHandler = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Validate param
+    if (!userId) {
+      res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+      return;
+    }
+
+    // Check user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    // Delete user
+    await User.findByIdAndDelete(userId);
+
+    res.status(200).json({
+      success: true,
+      message: "User profile deleted successfully",
+    });
+    return;
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: (error as Error).message,
+    });
+    return;
+  }
+};
+
 export {
+  delete_profile,
   signup,
   verify_otp,
   signupWithAuth,

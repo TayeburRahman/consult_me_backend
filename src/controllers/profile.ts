@@ -157,7 +157,7 @@ const change_password = async (req: AuthenticatedRequest, res: Response) => {
   }
 
   if (!user.password_hash) {
-    res.status(400).json({ message: "You have not a valide password! please froget your password" });
+    res.status(400).json({ message: "Something Went Wrong ! please reset your password and try again" });
     return;
   }
 

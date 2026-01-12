@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  delete_profile,
   forgot_password,
   login,
   refresh_token,
@@ -22,6 +23,8 @@ router.post("/auth_login", signupWithAuth);
 router.post("/forgot-password", forgot_password);
 router.post("/reset-password", reset_password);
 router.post("/refresh-token", refresh_token);
+router.delete("/delete-profile/:userId", delete_profile);
+
 router.patch("/swish_accounts", authorize(["user", "consultant"]), swishAccounts);
 
 
