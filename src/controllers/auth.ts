@@ -66,11 +66,15 @@ const signup = async (req: Request, res: Response) => {
 
   const password_hash = await plainPasswordToHash(password);
 
+  const emailVerified = type === "admin" ? true : false
+  
+
   await User.create({
     name,
     email,
     password_hash,
     role: type,
+    emailVerified,
     phone,
     lat,
     lng,
@@ -96,7 +100,7 @@ const swishAccounts = async (req: AuthenticatedRequest, res: Response) => {
     //  console.log("body role", req.body)
     //   console.log('query role : ',swishRole) 
     if (!["user", "consultant"].includes(swishRole as string)) {
-      res.status(400).json({ message: "Invalid swish role" });
+      res.status(400).json({ message: "Invalid switch role" });
       return;
     }
     const user = await User.findById(user_id) as any;
@@ -116,7 +120,7 @@ const swishAccounts = async (req: AuthenticatedRequest, res: Response) => {
 
     const refreshToken = generateRefreshToken(user.email, user.role, true);
     res.status(200).json({
-      message: "Swish account updated successfully",
+      message: "Switch account updated successfully",
       accessToken,
       refreshToken,
     });
@@ -126,7 +130,7 @@ const swishAccounts = async (req: AuthenticatedRequest, res: Response) => {
 
   }
   finally {
-    console.log("finnaly  aggain running ")
+    console.log("finally again running ")
   }
 };
 const verify_otp = async (req: Request, res: Response) => {
@@ -183,7 +187,7 @@ const login = async (req: Request, res: Response) => {
 
 
   if (!user.password_hash) {
-    res.status(400).json({ message: "Some  ! please froget your password" });
+    res.status(400).json({ message: "Something went wrong ! please forget your password" });
     return;
   }
 

@@ -15,6 +15,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.11.0",
     "multer": "^1.4.5-lts.1",
+    "node-fetch": "^3.3.2",
     "nodemailer": "^6.10.0",
     "prettyjson": "^1.2.5",
     "socket.io": "^4.8.1",
@@ -37,10 +38,9 @@
     "tsc-alias": "^1.8.11",
     "typescript": "^5.8.2"
   },
-"scripts": {
-  "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json && ls -la dist",
-  "start": "node dist/src/index.js",
-  "dev": "cross-env NODE_ENV=development nodemon -r tsconfig-paths/register src/index.ts"
-}
-
+  "scripts": {
+    "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json && ls -la dist",
+    "start": "node dist/src/index.js",
+    "dev": "cross-env NODE_ENV=development nodemon -r tsconfig-paths/register src/index.ts"
+  }
 }
