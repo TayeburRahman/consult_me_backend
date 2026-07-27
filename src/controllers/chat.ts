@@ -1,9 +1,10 @@
 import { AuthenticatedRequest } from "@middleware/auth";
 import uploadService from "@services/uploadService";
+import { generateLiveKitToken } from "@services/livekitService";
 import { Response } from "express";
 import mongoose from "mongoose";
 import { Server } from "socket.io";
-import { Message } from "../schema";
+import { Message, User } from "../schema";
 
 const io = new Server();
 
@@ -86,6 +87,65 @@ io.on("connection", (socket) => {
     }
   });
 
+  // ==========================================
+  // LiveKit Call Signaling Events
+  // ==========================================
+
+  // Caller sends call invite to receiver
+  socket.on("call_invite", (data) => {
+    const { receiverId } = data;
+    console.log(`📞 Call invite from ${data.callerId} to ${receiverId}`, data);
+
+    if (active_users[receiverId]) {
+      io.to(active_users[receiverId]).emit("call_invite", data);
+      console.log(`📞 Call invite relayed to ${receiverId} (socket: ${active_users[receiverId]})`);
+    } else {
+      console.log(`📞 Receiver ${receiverId} is offline, cannot relay call invite`);
+      // Notify caller that receiver is offline
+      socket.emit("call_rejected", {
+        callId: data.callId,
+        reason: "offline",
+        callerId: data.callerId,
+      });
+    }
+  });
+
+  // Receiver accepts call
+  socket.on("call_accepted", (data) => {
+    const { callerId } = data;
+    console.log(`✅ Call accepted by ${data.receiverId} for caller ${callerId}`, data);
+
+    if (active_users[callerId]) {
+      io.to(active_users[callerId]).emit("call_accepted", data);
+      console.log(`✅ Call accepted event relayed to caller ${callerId}`);
+    }
+  });
+
+  // Receiver rejects call
+  socket.on("call_rejected", (data) => {
+    const { callerId } = data;
+    console.log(`❌ Call rejected for caller ${callerId}`, data);
+
+    if (active_users[callerId]) {
+      io.to(active_users[callerId]).emit("call_rejected", data);
+      console.log(`❌ Call rejected event relayed to caller ${callerId}`);
+    }
+  });
+
+  // Either party hangs up the call
+  socket.on("call_hangup", (data) => {
+    const { callerId, receiverId } = data;
+    console.log(`📴 Call hangup`, data);
+
+    // Relay hangup to the other party
+    if (active_users[callerId]) {
+      io.to(active_users[callerId]).emit("call_hangup", data);
+    }
+    if (active_users[receiverId]) {
+      io.to(active_users[receiverId]).emit("call_hangup", data);
+    }
+  });
+
   socket.on("disconnect", () => {
     for (const user_id in active_users) {
       if (active_users[user_id] === socket.id) {
@@ -96,6 +156,40 @@ io.on("connection", (socket) => {
     }
   });
 });
+
+// ==========================================
+// LiveKit Token Generation Endpoint
+// ==========================================
+const generate_livekit_token = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  const { roomName, identity } = req.body;
+  const userId = req.user?.id;
+
+  if (!roomName || !identity) {
+    res.status(400).json({ message: "roomName and identity are required" });
+    return;
+  }
+
+  try {
+    // Fetch user name for display in LiveKit room
+    const user = await User.findById(userId);
+    const userName = user?.name || identity;
+
+    const token = await generateLiveKitToken(roomName, identity, userName);
+
+    console.log(`🎫 LiveKit token generated for user ${identity} in room ${roomName}`);
+
+    res.json({
+      message: "LiveKit token generated successfully",
+      data: { token },
+    });
+  } catch (error) {
+    console.error("Error generating LiveKit token:", error);
+    res.status(500).json({ message: "Failed to generate LiveKit token" });
+  }
+};
 
 const get_chat_list = async (req: AuthenticatedRequest, res: Response) => {
   const user_id = req.user?.id;
@@ -241,4 +335,4 @@ const upload_attachments = async (req: AuthenticatedRequest, res: Response) => {
   });
 };
 
-export { io, get_chat_list, upload_attachments };
+export { io, get_chat_list, upload_attachments, generate_livekit_token };

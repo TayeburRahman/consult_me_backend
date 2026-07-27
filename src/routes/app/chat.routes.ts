@@ -1,4 +1,4 @@
-import { get_chat_list, upload_attachments } from "@controllers/chat";
+import { get_chat_list, upload_attachments, generate_livekit_token } from "@controllers/chat";
 import { Router } from "express";
 import multer from "multer";
 
@@ -9,6 +9,12 @@ const upload = multer({
 });
 
 router.get("/chat_list", get_chat_list);
+
+// LiveKit token generation endpoint
+router.post("/livekit-token", (req, res, next) => {
+  Promise.resolve(generate_livekit_token(req, res)).catch(next);
+});
+
 router.post(
   "/upload",
   upload.fields([
