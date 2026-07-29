@@ -12,6 +12,11 @@ router.get("/", (req, res, next) => {
   Promise.resolve(get_call_records(req, res)).catch(next);
 });
 
+// Get call records specifically by User ID parameter
+router.get("/user/:userId", (req, res, next) => {
+  Promise.resolve(get_call_records(req, res)).catch(next);
+});
+
 // Get presigned URL for a recording (must be before /:id to avoid route conflict)
 router.get("/presigned-url/:id", (req, res, next) => {
   Promise.resolve(get_presigned_url(req, res)).catch(next);
