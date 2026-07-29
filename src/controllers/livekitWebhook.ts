@@ -2,14 +2,11 @@ import { Request, Response } from "express";
 import { WebhookReceiver } from "livekit-server-sdk";
 import { CallRecord } from "../schema";
 import { getS3Url } from "@services/s3Service";
+import { notifyRecordingStatus } from "@controllers/chat";
 
 /**
  * LiveKit Webhook Handler
- * Handles events from LiveKit Cloud (egress_ended, room_finished)
- * 
- * LiveKit sends webhook events as POST with:
- * - Header: Authorization (bearer token for verification)
- * - Body: JSON with event type and event data
+ * Handles events from LiveKit Cloud (egress_started, egress_ended, room_finished)
  */
 const livekit_webhook = async (req: Request, res: Response) => {
   try {
@@ -24,7 +21,6 @@ const livekit_webhook = async (req: Request, res: Response) => {
 
     const receiver = new WebhookReceiver(apiKey, apiSecret);
 
-    // Get the raw body and authorization header
     const authHeader = req.get("Authorization") || "";
     let body: string;
 
@@ -36,13 +32,11 @@ const livekit_webhook = async (req: Request, res: Response) => {
       body = JSON.stringify(req.body);
     }
 
-    // Verify and parse the webhook event
     let event;
     try {
       event = await receiver.receive(body, authHeader);
     } catch (verifyError) {
       console.error("❌ LiveKit webhook: Verification failed:", verifyError);
-      // Still try to parse the event without verification for development
       try {
         event = JSON.parse(body);
         console.warn("⚠️ LiveKit webhook: Proceeding without signature verification (dev mode)");
@@ -55,11 +49,11 @@ const livekit_webhook = async (req: Request, res: Response) => {
     console.log(`📡 LiveKit webhook received: ${event.event}`, JSON.stringify(event, null, 2));
 
     switch (event.event) {
-      case "egress_ended":
-        await handleEgressEnded(event);
-        break;
       case "egress_started":
         await handleEgressStarted(event);
+        break;
+      case "egress_ended":
+        await handleEgressEnded(event);
         break;
       case "room_finished":
         await handleRoomFinished(event);
@@ -77,7 +71,7 @@ const livekit_webhook = async (req: Request, res: Response) => {
 
 /**
  * Handle egress_started event
- * Store the egress ID on the call record
+ * Update CallRecord status to recording & set recordingStartedAt
  */
 const handleEgressStarted = async (event: any) => {
   try {
@@ -92,8 +86,21 @@ const handleEgressStarted = async (event: any) => {
     const callRecord = await CallRecord.findOne({ roomName });
     if (callRecord) {
       callRecord.egressId = egressId;
+      callRecord.recordingStartedAt = new Date();
+      callRecord.status = "recording";
       await callRecord.save();
-      console.log(`✅ LiveKit webhook: Egress started for room ${roomName}, egressId: ${egressId}`);
+      console.log(`🔴 LiveKit webhook: Egress started for room ${roomName} at ${callRecord.recordingStartedAt.toISOString()}`);
+
+      notifyRecordingStatus(
+        callRecord.caller.toString(),
+        callRecord.receiver.toString(),
+        {
+          roomName,
+          status: "started",
+          recordingStartedAt: callRecord.recordingStartedAt,
+          message: "🔴 Cloud Recording Started",
+        }
+      );
     }
   } catch (error) {
     console.error("❌ handleEgressStarted error:", error);
@@ -102,7 +109,7 @@ const handleEgressStarted = async (event: any) => {
 
 /**
  * Handle egress_ended event
- * Update CallRecord with recording URL, key, and duration
+ * Update CallRecord with recording URL, key, duration, and status completed
  */
 const handleEgressEnded = async (event: any) => {
   try {
@@ -117,33 +124,27 @@ const handleEgressEnded = async (event: any) => {
       return;
     }
 
-    // Find the call record by room name
     const callRecord = await CallRecord.findOne({ roomName });
     if (!callRecord) {
       console.log(`⚠️ LiveKit webhook: No CallRecord found for room ${roomName}`);
       return;
     }
 
-    // Extract file info from egress results
-    // LiveKit sends file results in different formats depending on the output type
     let recordingKey = "";
     let recordingUrl = "";
     let recordingDuration = 0;
 
-    // Check for file results (Room Composite -> File output)
     if (egressInfo.fileResults && egressInfo.fileResults.length > 0) {
       const fileResult = egressInfo.fileResults[0];
       recordingKey = fileResult.filename || "";
-      recordingDuration = Math.floor((fileResult.duration || 0) / 1e9); // nanoseconds to seconds
+      recordingDuration = Math.floor((fileResult.duration || 0) / 1e9);
     }
 
-    // Check for file result (singular - some SDK versions)
     if (!recordingKey && egressInfo.file) {
       recordingKey = egressInfo.file.filename || "";
       recordingDuration = Math.floor((egressInfo.file.duration || 0) / 1e9);
     }
 
-    // Check for segment results
     if (!recordingKey && egressInfo.segmentResults && egressInfo.segmentResults.length > 0) {
       const segmentResult = egressInfo.segmentResults[0];
       recordingKey = segmentResult.playlistName || "";
@@ -154,18 +155,16 @@ const handleEgressEnded = async (event: any) => {
       recordingUrl = getS3Url(recordingKey);
     }
 
-    // Update the call record
     callRecord.egressId = egressId;
     callRecord.recordingKey = recordingKey;
     callRecord.recordingUrl = recordingUrl;
+    callRecord.recordingEndedAt = new Date();
     callRecord.status = recordingKey ? "completed" : "failed";
 
-    // Update duration if we got it from egress and it's more accurate than what we had
     if (recordingDuration > 0) {
       callRecord.duration = recordingDuration;
     }
 
-    // Set callEndedAt if not already set
     if (!callRecord.callEndedAt) {
       callRecord.callEndedAt = new Date();
       if (callRecord.callStartedAt && !callRecord.duration) {
@@ -177,6 +176,19 @@ const handleEgressEnded = async (event: any) => {
 
     await callRecord.save();
     console.log(`✅ LiveKit webhook: CallRecord updated for room ${roomName} — recording: ${recordingKey}`);
+
+    notifyRecordingStatus(
+      callRecord.caller.toString(),
+      callRecord.receiver.toString(),
+      {
+        roomName,
+        status: "completed",
+        recordingEndedAt: callRecord.recordingEndedAt,
+        recordingUrl: callRecord.recordingUrl,
+        duration: callRecord.duration,
+        message: "✅ Cloud Recording Saved to S3",
+      }
+    );
   } catch (error) {
     console.error("❌ handleEgressEnded error:", error);
   }
@@ -184,7 +196,6 @@ const handleEgressEnded = async (event: any) => {
 
 /**
  * Handle room_finished event
- * Update callEndedAt and duration for the call record
  */
 const handleRoomFinished = async (event: any) => {
   try {
@@ -195,12 +206,8 @@ const handleRoomFinished = async (event: any) => {
     if (!roomName) return;
 
     const callRecord = await CallRecord.findOne({ roomName });
-    if (!callRecord) {
-      console.log(`⚠️ LiveKit webhook: No CallRecord found for room ${roomName}`);
-      return;
-    }
+    if (!callRecord) return;
 
-    // Only update if not already ended
     if (!callRecord.callEndedAt) {
       callRecord.callEndedAt = new Date();
       if (callRecord.callStartedAt) {

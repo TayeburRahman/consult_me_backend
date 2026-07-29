@@ -320,9 +320,15 @@ const CallRecordSchema = new Schema(
     egressId: {
       type: String,
     },
+    recordingStartedAt: {
+      type: Date,
+    },
+    recordingEndedAt: {
+      type: Date,
+    },
     status: {
       type: String,
-      enum: ["in_progress", "completed", "failed", "no_recording"],
+      enum: ["in_progress", "recording", "completed", "failed", "no_recording"],
       default: "in_progress",
     },
   },

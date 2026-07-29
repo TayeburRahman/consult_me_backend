@@ -383,4 +383,18 @@ const upload_attachments = async (req: AuthenticatedRequest, res: Response) => {
   });
 };
 
-export { io, get_chat_list, upload_attachments, generate_livekit_token };
+const notifyRecordingStatus = (user1: string, user2: string, data: any) => {
+  try {
+    if (user1 && active_users[user1]) {
+      io.to(active_users[user1]).emit("recording_status", data);
+    }
+    if (user2 && active_users[user2]) {
+      io.to(active_users[user2]).emit("recording_status", data);
+    }
+  } catch (err) {
+    console.error("Error emitting recording_status:", err);
+  }
+};
+
+export { io, get_chat_list, upload_attachments, generate_livekit_token, notifyRecordingStatus };
+
