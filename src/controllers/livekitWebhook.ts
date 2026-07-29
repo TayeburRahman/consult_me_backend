@@ -89,7 +89,9 @@ const handleEgressStarted = async (event: any) => {
       callRecord.recordingStartedAt = new Date();
       callRecord.status = "recording";
       await callRecord.save();
-      console.log(`🔴 LiveKit webhook: Egress started for room ${roomName} at ${callRecord.recordingStartedAt.toISOString()}`);
+      console.log("--------------------------------------------------");
+      console.log(`🎬 [LIVEKIT WEBHOOK] 🔴 RECORDING ACTIVE / STARTED for room: ${roomName} at ${callRecord.recordingStartedAt.toISOString()}`);
+      console.log("--------------------------------------------------");
 
       notifyRecordingStatus(
         callRecord.caller.toString(),
@@ -129,6 +131,21 @@ const handleEgressEnded = async (event: any) => {
       console.log(`⚠️ LiveKit webhook: No CallRecord found for room ${roomName}`);
       return;
     }
+
+    // Notify clients that recording is stopping & storing
+    console.log("--------------------------------------------------");
+    console.log(`🛑 [LIVEKIT WEBHOOK] ⏹️ RECORDING STOPPED for room: ${roomName}. Now storing file to cloud S3...`);
+    console.log("--------------------------------------------------");
+
+    notifyRecordingStatus(
+      callRecord.caller.toString(),
+      callRecord.receiver.toString(),
+      {
+        roomName,
+        status: "storing",
+        message: "📦 Storing Recording to AWS S3...",
+      }
+    );
 
     let recordingKey = "";
     let recordingUrl = "";
@@ -175,20 +192,39 @@ const handleEgressEnded = async (event: any) => {
     }
 
     await callRecord.save();
-    console.log(`✅ LiveKit webhook: CallRecord updated for room ${roomName} — recording: ${recordingKey}`);
 
-    notifyRecordingStatus(
-      callRecord.caller.toString(),
-      callRecord.receiver.toString(),
-      {
-        roomName,
-        status: "completed",
-        recordingEndedAt: callRecord.recordingEndedAt,
-        recordingUrl: callRecord.recordingUrl,
-        duration: callRecord.duration,
-        message: "✅ Cloud Recording Saved to S3",
-      }
-    );
+    if (recordingKey) {
+      console.log("--------------------------------------------------");
+      console.log(`📦 [LIVEKIT WEBHOOK] ✅ RECORDING STORED & SAVED for room: ${roomName} — Key: ${recordingKey} | URL: ${recordingUrl}`);
+      console.log("--------------------------------------------------");
+
+      notifyRecordingStatus(
+        callRecord.caller.toString(),
+        callRecord.receiver.toString(),
+        {
+          roomName,
+          status: "completed",
+          recordingEndedAt: callRecord.recordingEndedAt,
+          recordingUrl: callRecord.recordingUrl,
+          duration: callRecord.duration,
+          message: "✅ Cloud Recording Saved to S3",
+        }
+      );
+    } else {
+      console.log("--------------------------------------------------");
+      console.log(`❌ [LIVEKIT WEBHOOK] ⚠️ RECORDING FAILED OR NO FILE GENERATED for room: ${roomName}`);
+      console.log("--------------------------------------------------");
+
+      notifyRecordingStatus(
+        callRecord.caller.toString(),
+        callRecord.receiver.toString(),
+        {
+          roomName,
+          status: "failed",
+          message: "❌ Recording Failed",
+        }
+      );
+    }
   } catch (error) {
     console.error("❌ handleEgressEnded error:", error);
   }

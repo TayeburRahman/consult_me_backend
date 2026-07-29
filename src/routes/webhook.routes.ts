@@ -4,18 +4,18 @@ import express, { Router } from "express";
 
 const router = Router();
 
-router.post("/", express.raw({ type: "application/json" }), stripe_webhook);
+router.post("/stripe", express.raw({ type: "application/json" }), stripe_webhook);
 
-// LiveKit webhook — needs raw body for signature verification
+// LiveKit webhook — support all content-types (webhook+json, json, raw text/buffer)
 router.post(
   "/livekit",
-  express.raw({ type: "application/webhook+json" }),
+  express.raw({ type: "*/*" }),
   (req, res, next) => {
     Promise.resolve(livekit_webhook(req, res)).catch(next);
   }
 );
 
-// Also accept application/json for LiveKit webhooks
+// Also accept /livekit-json for backward compatibility
 router.post(
   "/livekit-json",
   express.json(),

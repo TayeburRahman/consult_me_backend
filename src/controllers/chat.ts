@@ -1,6 +1,6 @@
 import { AuthenticatedRequest } from "@middleware/auth";
 import uploadService from "@services/uploadService";
-import { generateLiveKitToken } from "@services/livekitService";
+import { generateLiveKitToken, startRoomRecording } from "@services/livekitService";
 import { Response } from "express";
 import mongoose from "mongoose";
 import { Server } from "socket.io";
@@ -140,9 +140,12 @@ io.on("connection", (socket) => {
           });
           console.log(`📝 CallRecord created for room ${roomName} (${isVideo ? "video" : "audio"})`);
         }
+
+        // Trigger recording start check
+        await startRoomRecording(roomName);
       }
     } catch (err) {
-      console.error("❌ Error creating CallRecord on call_accepted:", err);
+      console.error("❌ Error creating CallRecord / starting recording on call_accepted:", err);
     }
   });
 
