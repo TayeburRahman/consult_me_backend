@@ -9,3 +9,4 @@ export { default as dashboardRoutes } from "./dashboard.routes";
 export { default as notificationRoutes } from "./notification.routes";
 export { default as mapRoutes } from "./map.routes";
 export { default as paymentsRoutes } from "./payments.routes";
+export { default as callRecordRoutes } from "./callRecord.routes";

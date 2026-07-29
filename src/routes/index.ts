@@ -36,6 +36,11 @@ const registerUserRoutes = (app: Express) => {
   );
   app.use("/map", authorize(["user"]), userRoutes.mapRoutes);
   app.use("/payments", authorize(["consultant"]), userRoutes.paymentsRoutes);
+  app.use(
+    "/call-records",
+    authorize(["user", "consultant"]),
+    userRoutes.callRecordRoutes
+  );
 };
 const registerAdminRoutes = (app: Express) => {
   app.use("/admin/category", authorize(["admin"]), adminRoutes.categoryRoutes);

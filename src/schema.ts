@@ -278,6 +278,57 @@ const WithdrawSchema = new Schema(
   { timestamps: true }
 );
 
+const CallRecordSchema = new Schema(
+  {
+    roomName: { type: String, required: true, index: true },
+    callType: {
+      type: String,
+      enum: ["audio", "video"],
+      required: true,
+    },
+    caller: {
+      type: Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    receiver: {
+      type: Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    bookingId: {
+      type: Types.ObjectId,
+      ref: "Booking",
+    },
+    callStartedAt: {
+      type: Date,
+      required: true,
+    },
+    callEndedAt: {
+      type: Date,
+    },
+    duration: {
+      type: Number,
+      default: 0,
+    },
+    recordingUrl: {
+      type: String,
+    },
+    recordingKey: {
+      type: String,
+    },
+    egressId: {
+      type: String,
+    },
+    status: {
+      type: String,
+      enum: ["in_progress", "completed", "failed", "no_recording"],
+      default: "in_progress",
+    },
+  },
+  { timestamps: true }
+);
+
 const User = model("User", UserSchema);
 const OTP = model("OTP", OTPSchema);
 const Notification = model("Notification", NotificationSchema);
@@ -288,6 +339,7 @@ const Booking = model("Booking", BookingSchema);
 const Message = model("Message", MessageSchema);
 const Payment = model("Payment", PaymentSchema);
 const Withdraw = model("Withdraw", WithdrawSchema);
+const CallRecord = model("CallRecord", CallRecordSchema);
 
 export {
   User,
@@ -300,4 +352,5 @@ export {
   Message,
   Payment,
   Withdraw,
+  CallRecord,
 };

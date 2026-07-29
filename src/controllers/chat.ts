@@ -4,7 +4,7 @@ import { generateLiveKitToken } from "@services/livekitService";
 import { Response } from "express";
 import mongoose from "mongoose";
 import { Server } from "socket.io";
-import { Message, User } from "../schema";
+import { Message, User, CallRecord } from "../schema";
 
 const io = new Server();
 
@@ -111,13 +111,38 @@ io.on("connection", (socket) => {
   });
 
   // Receiver accepts call
-  socket.on("call_accepted", (data) => {
+  socket.on("call_accepted", async (data) => {
     const { callerId } = data;
     console.log(`✅ Call accepted by ${data.receiverId} for caller ${callerId}`, data);
 
     if (active_users[callerId]) {
       io.to(active_users[callerId]).emit("call_accepted", data);
       console.log(`✅ Call accepted event relayed to caller ${callerId}`);
+    }
+
+    // Create a CallRecord when the call is accepted (both parties joining)
+    try {
+      const roomName = data.roomName || "";
+      const isVideo = data.isVideo === true || data.isVideo === "true";
+      const receiverId = data.receiverId || "";
+
+      if (roomName && callerId && receiverId) {
+        // Check if a record already exists for this room
+        const existing = await CallRecord.findOne({ roomName });
+        if (!existing) {
+          await CallRecord.create({
+            roomName,
+            callType: isVideo ? "video" : "audio",
+            caller: callerId,
+            receiver: receiverId,
+            callStartedAt: new Date(),
+            status: "in_progress",
+          });
+          console.log(`📝 CallRecord created for room ${roomName} (${isVideo ? "video" : "audio"})`);
+        }
+      }
+    } catch (err) {
+      console.error("❌ Error creating CallRecord on call_accepted:", err);
     }
   });
 
@@ -133,7 +158,7 @@ io.on("connection", (socket) => {
   });
 
   // Either party hangs up the call
-  socket.on("call_hangup", (data) => {
+  socket.on("call_hangup", async (data) => {
     const { callerId, receiverId } = data;
     console.log(`📴 Call hangup`, data);
 
@@ -143,6 +168,29 @@ io.on("connection", (socket) => {
     }
     if (active_users[receiverId]) {
       io.to(active_users[receiverId]).emit("call_hangup", data);
+    }
+
+    // Update CallRecord with end time and duration
+    try {
+      const roomName = data.roomName || data.callId ? `room_${data.callId}` : "";
+      if (roomName) {
+        const callRecord = await CallRecord.findOne({
+          roomName,
+          status: "in_progress",
+        });
+        if (callRecord) {
+          callRecord.callEndedAt = new Date();
+          if (callRecord.callStartedAt) {
+            callRecord.duration = Math.floor(
+              (new Date().getTime() - new Date(callRecord.callStartedAt).getTime()) / 1000
+            );
+          }
+          await callRecord.save();
+          console.log(`📝 CallRecord updated for room ${roomName} — duration: ${callRecord.duration}s`);
+        }
+      }
+    } catch (err) {
+      console.error("❌ Error updating CallRecord on call_hangup:", err);
     }
   });
 
